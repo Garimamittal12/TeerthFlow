@@ -1,73 +1,118 @@
-# Welcome to your Lovable project
+# 🛕 TeerthFlow  
 
-## Project info
+A modern, responsive web application for discovering and exploring Hindu pilgrimage sites (Teerths) across India. Built with **React**, **TypeScript**, and modern web technologies.  
 
-**URL**: https://lovable.dev/projects/6e8953b0-c958-44a5-975d-a55545189fbe
+![TeerthFlow](https://img.shields.io/badge/TeerthFlow-Pilgrimage%20Guide-blue) ![React](https://img.shields.io/badge/React-18.2.0-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue) ![Vite](https://img.shields.io/badge/Vite-4.4.0-purple)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 📸 Project Overview  
+## Crowd Level Detection Dashboard for Temples  
 
-**Use Lovable**
+A real-time crowd monitoring and visualization system using **ESP8266-based IR sensors**, a **Flask backend**, and a **React frontend**.  
+Designed to help pilgrims and administrators monitor people counts and crowd levels in temples.  
+<br>
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6e8953b0-c958-44a5-975d-a55545189fbe) and start prompting.
+This project integrates **IoT and web technologies** to enhance temple management:  
 
-Changes made via Lovable will be committed automatically to this repo.
+- **ESP8266 microcontrollers with IR sensors** → detect people entering and exiting  
+- **Flask backend** → process data from ESP devices over HTTP  
+- **React dashboard** → visualize real-time crowd levels for each temple
+<br>
+ It bridges spirituality with modern digital tools by providing an **interactive pilgrimage and crowd-monitoring guide**.  
 
-**Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+  
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 📦 Features  
 
-Follow these steps:
+✅ Modern UI built with React + TypeScript   
+✅ Real-time crowd detection  
+✅ Crowd categorization: Low / Medium / High  
+✅ Per-temple tracking with dynamic updates  
+✅ WebSocket support for live updates (optional)  
+✅ Mobile-friendly dashboard UI
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🚀 Getting Started
+## 🧠 Requirements
+- Node.js (v16+)
+- Python (3.10+)
+- Flask & Flask-CORS
+- React (Vite or Create React App)
+- ESP8266 module (NodeMCU recommended)
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## 🐍 Backend Setup
+📁 Go to the backend directory:
+
+```bash
+cd backend
+````
+---
+
+🛠️ Create a virtual environment (optional):
+
+````bash
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+````
+---
+📦 Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+---
+
+▶️ Run the backend:
+```bash
+python app.py
+````
+Backend will start on: http://localhost:5000
+
+---
+## ⚛️ Frontend Setup
+📁 Go to the frontend directory:
+
+```bash
+cd frontend
+```
+---
+📦 Install dependencies:
+
+```bash
+npm install
+```
+---
+
+▶️ Start the dev server:
+
+```bash
 npm run dev
 ```
+Frontend runs on: http://localhost:5173
 
-**Edit a file directly in GitHub**
+---
+## 📡 ESP8266 Firmware
+- Program the ESP8266 with the Arduino sketch in firmware/esp8266_crowd_counter.ino
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- Update Wi-Fi SSID, Password, and backend IP address in the code
 
-**Use GitHub Codespaces**
+- IR sensors should be connected to D1 (entry) and D2 (exit)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## What technologies are used for this project?
+## 🧠 How Crowd Level is Calculated
 
-This project is built with:
+| People Count | Crowd Level |
+|--------------|-------------|
+| 0–20         | Low         |
+| 21–40        | Medium      |
+| 41+          | High        |
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
 
-## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/6e8953b0-c958-44a5-975d-a55545189fbe) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+You can customize this logic in app.py.
