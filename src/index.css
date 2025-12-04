@@ -1,0 +1,350 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&family=Cormorant+Garamond:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    /* Traditional Indian Light Theme - Inspired by temple architecture */
+    --background: 35 30% 96%;
+    --foreground: 15 35% 18%;
+
+    --card: 38 45% 97%;
+    --card-foreground: 15 35% 18%;
+
+    --popover: 40 40% 99%;
+    --popover-foreground: 15 35% 18%;
+
+    /* Deep Saffron - Sacred temple color */
+    --primary: 24 95% 53%;
+    --primary-foreground: 40 40% 99%;
+
+    /* Deep Maroon - Traditional Indian fabric */
+    --secondary: 350 65% 28%;
+    --secondary-foreground: 40 40% 99%;
+
+    /* Warm muted tones */
+    --muted: 35 25% 90%;
+    --muted-foreground: 25 20% 45%;
+
+    /* Peacock teal accent */
+    --accent: 175 45% 35%;
+    --accent-foreground: 40 40% 99%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 40 40% 99%;
+
+    --success: 152 60% 36%;
+    --success-foreground: 40 40% 99%;
+
+    /* Traditional Gold */
+    --warning: 45 93% 47%;
+    --warning-foreground: 15 35% 18%;
+
+    --border: 35 30% 85%;
+    --input: 35 30% 85%;
+    --ring: 24 95% 53%;
+
+    --radius: 0.75rem;
+
+    /* Traditional Indian TeerthFlow tokens */
+    --saffron: 24 95% 53%;
+    --saffron-light: 28 90% 65%;
+    --saffron-dark: 20 95% 45%;
+    --maroon: 350 65% 28%;
+    --maroon-light: 350 55% 38%;
+    --gold: 45 93% 47%;
+    --gold-light: 48 85% 60%;
+    --peacock: 175 45% 35%;
+    --peacock-light: 175 40% 50%;
+    --terracotta: 15 55% 50%;
+    --cream: 35 30% 96%;
+    --sandstone: 38 35% 88%;
+
+    /* Gradients - Temple inspired */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--saffron)) 0%, hsl(var(--gold)) 50%, hsl(var(--saffron-light)) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--sandstone)) 100%);
+    --gradient-overlay: linear-gradient(180deg, transparent 0%, hsla(var(--maroon), 0.85) 100%);
+    --gradient-sacred: linear-gradient(135deg, hsl(var(--maroon)) 0%, hsl(var(--saffron-dark)) 100%);
+
+    /* Shadows with warm tones */
+    --shadow-sm: 0 1px 2px hsla(var(--maroon), 0.06);
+    --shadow-md: 0 4px 6px -1px hsla(var(--maroon), 0.1), 0 2px 4px -2px hsla(var(--maroon), 0.06);
+    --shadow-lg: 0 10px 15px -3px hsla(var(--maroon), 0.12), 0 4px 6px -4px hsla(var(--maroon), 0.08);
+    --shadow-xl: 0 20px 25px -5px hsla(var(--maroon), 0.15), 0 8px 10px -6px hsla(var(--maroon), 0.1);
+    --shadow-glow: 0 0 40px hsla(var(--gold), 0.4);
+
+    --sidebar-background: 38 45% 97%;
+    --sidebar-foreground: 15 35% 18%;
+    --sidebar-primary: 24 95% 53%;
+    --sidebar-primary-foreground: 40 40% 99%;
+    --sidebar-accent: 35 25% 92%;
+    --sidebar-accent-foreground: 15 35% 18%;
+    --sidebar-border: 35 30% 85%;
+    --sidebar-ring: 24 95% 53%;
+  }
+
+  .dark {
+    /* Evening Temple Ambiance - Deep maroon/burgundy with gold accents */
+    --background: 350 35% 8%;
+    --foreground: 40 25% 90%;
+
+    --card: 350 30% 12%;
+    --card-foreground: 40 25% 90%;
+
+    --popover: 350 30% 14%;
+    --popover-foreground: 40 25% 90%;
+
+    /* Warm golden saffron for primary */
+    --primary: 38 90% 55%;
+    --primary-foreground: 350 35% 8%;
+
+    /* Rich gold for secondary */
+    --secondary: 45 85% 50%;
+    --secondary-foreground: 350 35% 8%;
+
+    /* Deep burgundy muted tones */
+    --muted: 350 25% 18%;
+    --muted-foreground: 35 20% 60%;
+
+    /* Peacock accent with gold tint */
+    --accent: 175 45% 40%;
+    --accent-foreground: 350 35% 8%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 40 25% 95%;
+
+    --success: 152 55% 40%;
+    --success-foreground: 40 25% 95%;
+
+    --warning: 45 90% 50%;
+    --warning-foreground: 350 35% 8%;
+
+    --border: 350 20% 20%;
+    --input: 350 25% 18%;
+    --ring: 38 90% 55%;
+
+    /* Dark theme custom tokens - Evening diya glow */
+    --saffron: 38 90% 55%;
+    --saffron-light: 42 85% 65%;
+    --saffron-dark: 32 90% 45%;
+    --maroon: 350 45% 25%;
+    --maroon-light: 350 40% 35%;
+    --gold: 45 85% 50%;
+    --gold-light: 48 80% 60%;
+    --peacock: 175 45% 40%;
+    --peacock-light: 175 40% 50%;
+    --terracotta: 15 55% 50%;
+    --cream: 40 25% 85%;
+    --sandstone: 350 20% 16%;
+
+    /* Gradients for dark mode */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--maroon)) 0%, hsl(var(--saffron-dark)) 50%, hsl(var(--gold)) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--sandstone)) 100%);
+    --gradient-overlay: linear-gradient(180deg, transparent 0%, hsla(var(--background), 0.95) 100%);
+    --gradient-sacred: linear-gradient(135deg, hsl(var(--maroon)) 0%, hsl(var(--saffron-dark)) 100%);
+
+    /* Warm shadows for dark mode */
+    --shadow-sm: 0 1px 2px hsla(var(--gold), 0.08);
+    --shadow-md: 0 4px 6px -1px hsla(var(--gold), 0.12), 0 2px 4px -2px hsla(var(--gold), 0.08);
+    --shadow-lg: 0 10px 15px -3px hsla(var(--gold), 0.15), 0 4px 6px -4px hsla(var(--gold), 0.1);
+    --shadow-xl: 0 20px 25px -5px hsla(var(--gold), 0.18), 0 8px 10px -6px hsla(var(--gold), 0.12);
+    --shadow-glow: 0 0 40px hsla(var(--gold), 0.3);
+
+    --sidebar-background: 350 30% 12%;
+    --sidebar-foreground: 40 25% 90%;
+    --sidebar-primary: 38 90% 55%;
+    --sidebar-primary-foreground: 350 35% 8%;
+    --sidebar-accent: 350 25% 18%;
+    --sidebar-accent-foreground: 40 25% 90%;
+    --sidebar-border: 350 20% 20%;
+    --sidebar-ring: 38 90% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300 rounded-lg px-6 py-3 font-medium;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-md hover:shadow-lg transition-all duration-300 rounded-lg px-6 py-3 font-medium;
+  }
+
+  .btn-outline {
+    @apply border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 rounded-lg px-6 py-3 font-medium;
+  }
+
+  .card-elevated {
+    @apply bg-card rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-border/50;
+  }
+
+  .card-interactive {
+    @apply card-elevated hover:scale-[1.02] hover:-translate-y-1 cursor-pointer;
+  }
+
+  /* Traditional Indian decorative border */
+  .border-ornate {
+    @apply relative;
+    border-image: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--saffron)) 50%, hsl(var(--gold)) 100%) 1;
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-sacred {
+    background: var(--gradient-sacred);
+  }
+
+  .gradient-overlay {
+    background: var(--gradient-overlay);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent inline-block;
+    background-image: linear-gradient(135deg, hsl(var(--saffron)) 0%, hsl(var(--gold)) 50%, hsl(var(--saffron-dark)) 100%);
+  }
+
+  /* Temple-inspired decorative element */
+  .temple-divider {
+    @apply relative h-1 w-full;
+    background: linear-gradient(90deg, transparent 0%, hsl(var(--gold)) 20%, hsl(var(--saffron)) 50%, hsl(var(--gold)) 80%, transparent 100%);
+  }
+
+  .badge-live {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/15 text-success text-sm font-medium border border-success/20;
+  }
+
+  .badge-offline {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/15 text-destructive text-sm font-medium border border-destructive/20;
+  }
+
+  .badge-crowd-low {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/15 text-success text-sm font-medium border border-success/20;
+  }
+
+  .badge-crowd-medium {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning/15 text-warning text-sm font-semibold border border-warning/20;
+  }
+
+  .badge-crowd-high {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 text-primary text-sm font-semibold border border-primary/20;
+  }
+
+  .badge-crowd-extreme {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/15 text-destructive text-sm font-semibold border border-destructive/20;
+  }
+
+  .skeleton {
+    @apply animate-pulse bg-muted rounded-lg;
+  }
+
+  /* Traditional pattern overlay */
+  .pattern-mandala {
+    background-image: radial-gradient(circle at center, hsla(var(--gold), 0.1) 0%, transparent 50%);
+    background-size: 60px 60px;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+
+  .animate-pulse-soft {
+    animation: pulseSoft 2s ease-in-out infinite;
+  }
+
+  .stagger-1 {
+    animation-delay: 0.1s;
+  }
+
+  .stagger-2 {
+    animation-delay: 0.2s;
+  }
+
+  .stagger-3 {
+    animation-delay: 0.3s;
+  }
+
+  .stagger-4 {
+    animation-delay: 0.4s;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseSoft {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
