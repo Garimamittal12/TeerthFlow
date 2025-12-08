@@ -42,7 +42,9 @@ export function StateCard({ state, index = 0 }: StateCardProps) {
                 </p>
 
                 <Button
-                    className="w-full px-4 py-2 text-sm border border-input hover:bg-primary hover:text-primary-foreground"
+                    variant="outline"
+                    size="sm"
+                    className="w-full group-hover:bg-primary group-hover:text-primary-foreground"
                     tabIndex={-1}
                 >
                     Explore Temples

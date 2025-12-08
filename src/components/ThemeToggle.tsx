@@ -8,6 +8,8 @@ export function ThemeToggle() {
 
     return (
         <Button
+            variant="ghost"
+            size="icon"
             onClick={toggleTheme}
             className={cn(
                 "relative h-9 w-9 rounded-xl transition-all duration-300",

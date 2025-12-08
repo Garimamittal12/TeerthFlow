@@ -144,7 +144,7 @@
     --gradient-card: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--sandstone)) 100%);
     --gradient-overlay: linear-gradient(180deg, transparent 0%, hsla(var(--background), 0.95) 100%);
     --gradient-sacred: linear-gradient(135deg, hsl(var(--maroon)) 0%, hsl(var(--saffron-dark)) 100%);
-
+    
     /* Warm shadows for dark mode */
     --shadow-sm: 0 1px 2px hsla(var(--gold), 0.08);
     --shadow-md: 0 4px 6px -1px hsla(var(--gold), 0.12), 0 2px 4px -2px hsla(var(--gold), 0.08);
@@ -172,31 +172,32 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1, h2, h3, h4, h5, h6 {
     @apply font-display font-semibold tracking-tight;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300 rounded-lg px-6 py-3 font-medium;
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 
+           shadow-md hover:shadow-lg transition-all duration-300 
+           rounded-lg px-6 py-3 font-medium;
   }
 
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-md hover:shadow-lg transition-all duration-300 rounded-lg px-6 py-3 font-medium;
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 
+           shadow-md hover:shadow-lg transition-all duration-300 
+           rounded-lg px-6 py-3 font-medium;
   }
 
   .btn-outline {
-    @apply border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 rounded-lg px-6 py-3 font-medium;
+    @apply border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground 
+           transition-all duration-300 rounded-lg px-6 py-3 font-medium;
   }
 
   .card-elevated {
-    @apply bg-card rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-border/50;
+    @apply bg-card rounded-2xl shadow-lg hover:shadow-xl 
+           transition-all duration-300 overflow-hidden border border-border/50;
   }
 
   .card-interactive {
@@ -233,27 +234,33 @@
   }
 
   .badge-live {
-    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/15 text-success text-sm font-medium border border-success/20;
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full 
+           bg-success/15 text-success text-sm font-medium border border-success/20;
   }
 
   .badge-offline {
-    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/15 text-destructive text-sm font-medium border border-destructive/20;
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full 
+           bg-destructive/15 text-destructive text-sm font-medium border border-destructive/20;
   }
 
   .badge-crowd-low {
-    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/15 text-success text-sm font-medium border border-success/20;
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full 
+           bg-success/15 text-success text-sm font-medium border border-success/20;
   }
 
   .badge-crowd-medium {
-    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning/15 text-warning text-sm font-semibold border border-warning/20;
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full 
+           bg-warning/15 text-warning text-sm font-semibold border border-warning/20;
   }
 
   .badge-crowd-high {
-    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 text-primary text-sm font-semibold border border-primary/20;
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full 
+           bg-primary/15 text-primary text-sm font-semibold border border-primary/20;
   }
 
   .badge-crowd-extreme {
-    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/15 text-destructive text-sm font-semibold border border-destructive/20;
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full 
+           bg-destructive/15 text-destructive text-sm font-semibold border border-destructive/20;
   }
 
   .skeleton {
@@ -284,21 +291,10 @@
     animation: pulseSoft 2s ease-in-out infinite;
   }
 
-  .stagger-1 {
-    animation-delay: 0.1s;
-  }
-
-  .stagger-2 {
-    animation-delay: 0.2s;
-  }
-
-  .stagger-3 {
-    animation-delay: 0.3s;
-  }
-
-  .stagger-4 {
-    animation-delay: 0.4s;
-  }
+  .stagger-1 { animation-delay: 0.1s; }
+  .stagger-2 { animation-delay: 0.2s; }
+  .stagger-3 { animation-delay: 0.3s; }
+  .stagger-4 { animation-delay: 0.4s; }
 }
 
 @keyframes fadeIn {
@@ -306,7 +302,6 @@
     opacity: 0;
     transform: translateY(10px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -318,7 +313,6 @@
     opacity: 0;
     transform: translateY(30px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -330,7 +324,6 @@
     opacity: 0;
     transform: scale(0.95);
   }
-
   to {
     opacity: 1;
     transform: scale(1);
@@ -338,12 +331,9 @@
 }
 
 @keyframes pulseSoft {
-
-  0%,
-  100% {
+  0%, 100% {
     opacity: 1;
   }
-
   50% {
     opacity: 0.7;
   }

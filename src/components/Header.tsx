@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Home, Info, Mail, User, LogOut } from "lucide-react";
+import { Menu, X, Home, Info, Mail, User, LogOut, Calendar } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ import {
 
 const navItems = [
     { label: "Home", path: "/", icon: Home },
+    { label: "Itinerary", path: "/itinerary", icon: Calendar },
     { label: "About", path: "/about", icon: Info },
     { label: "Contact", path: "/contact", icon: Mail },
 ];
@@ -80,6 +81,8 @@ export function Header() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
+                                    variant="ghost"
+                                    size="icon"
                                     className="h-9 w-9 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary"
                                 >
                                     <User className="h-4 w-4" />
@@ -101,6 +104,8 @@ export function Header() {
                     ) : (
                         <Link to="/auth">
                             <Button
+                                variant="default"
+                                size="sm"
                                 className="rounded-xl bg-gradient-to-r from-primary to-saffron-dark hover:from-primary/90 hover:to-saffron-dark/90 text-primary-foreground font-medium shadow-md"
                             >
                                 <User className="mr-2 h-4 w-4" />
@@ -110,14 +115,16 @@ export function Header() {
                     )}
 
                     {/* Mobile Menu Button */}
-                    <button
-                        className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="md:hidden"
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         aria-label={isMenuOpen ? "Close menu" : "Open menu"}
                         aria-expanded={isMenuOpen}
                     >
                         {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                    </button>
+                    </Button>
                 </div>
             </div>
 

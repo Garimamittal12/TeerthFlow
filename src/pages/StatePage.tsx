@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -17,10 +17,13 @@ import {
 import {
     getStateById,
     getTemplesByState,
-    devices,
-    crowdData,
+    devices as initialDevices,
+    crowdData as initialCrowdData,
+    getCrowdLevel,
     type State,
     type Temple,
+    type Device,
+    type CrowdData,
 } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +37,9 @@ export default function StatePage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [category, setCategory] = useState("All");
-    const [crowdLevel, setCrowdLevel] = useState("All");
+    const [crowdLevelFilter, setCrowdLevelFilter] = useState("All");
+    const [devices, setDevices] = useState<Device[]>(initialDevices);
+    const [crowdData, setCrowdData] = useState<CrowdData[]>(initialCrowdData);
 
     useEffect(() => {
         if (!stateId) return;
@@ -48,6 +53,36 @@ export default function StatePage() {
             }
         );
     }, [stateId]);
+
+    // Real-time crowd simulation
+    const updateCrowdData = useCallback(() => {
+        setCrowdData(prevCrowdData =>
+            prevCrowdData.map(crowd => {
+                const delta = Math.floor(Math.random() * 21) - 8; // -8 to +12
+                const newCount = Math.max(0, crowd.currentCount + delta);
+                const newLevel = getCrowdLevel(newCount);
+
+                return {
+                    ...crowd,
+                    currentCount: newCount,
+                    crowdLevel: newLevel,
+                    lastUpdated: new Date().toISOString(),
+                    history: [
+                        ...crowd.history.slice(-23),
+                        { time: new Date().toISOString(), count: newCount }
+                    ],
+                };
+            })
+        );
+    }, []);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            updateCrowdData();
+        }, Math.random() * 4000 + 3000); // 3-7 seconds
+
+        return () => clearInterval(interval);
+    }, [updateCrowdData]);
 
     const filteredTemples = useMemo(() => {
         return temples.filter((temple) => {
@@ -65,17 +100,21 @@ export default function StatePage() {
                 return false;
             }
 
-            // Crowd level filter
-            if (crowdLevel !== "All") {
+            // Crowd level filter - compare case-insensitively
+            if (crowdLevelFilter !== "All") {
                 const templeCrowd = crowdData.find((c) => c.templeId === temple.id);
-                if (!templeCrowd || templeCrowd.crowdLevel !== crowdLevel) {
+                if (!templeCrowd) return false;
+
+                // Recalculate crowd level based on current count for real-time accuracy
+                const currentLevel = getCrowdLevel(templeCrowd.currentCount);
+                if (currentLevel.toLowerCase() !== crowdLevelFilter.toLowerCase()) {
                     return false;
                 }
             }
 
             return true;
         });
-    }, [temples, search, category, crowdLevel]);
+    }, [temples, search, category, crowdLevelFilter, crowdData]);
 
     if (!loading && !state) {
         return (
@@ -162,7 +201,7 @@ export default function StatePage() {
                             </Select>
 
                             {/* Crowd Level Filter */}
-                            <Select value={crowdLevel} onValueChange={setCrowdLevel}>
+                            <Select value={crowdLevelFilter} onValueChange={setCrowdLevelFilter}>
                                 <SelectTrigger className="w-full md:w-44 rounded-xl">
                                     <SlidersHorizontal className="h-4 w-4 mr-2" />
                                     <SelectValue placeholder="Crowd Level" />
@@ -199,12 +238,12 @@ export default function StatePage() {
                                     No temples match your filters
                                 </p>
                                 <Button
+                                    variant="outline"
                                     onClick={() => {
                                         setSearch("");
                                         setCategory("All");
-                                        setCrowdLevel("All");
+                                        setCrowdLevelFilter("All");
                                     }}
-                                    className="border border-border"
                                 >
                                     Clear Filters
                                 </Button>

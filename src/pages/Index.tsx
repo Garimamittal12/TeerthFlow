@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { MapPin, ChevronRight, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { MapPin, ChevronRight, Sparkles, Lock } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { StateCard } from "@/components/StateCard";
@@ -7,10 +8,13 @@ import { SearchSelect } from "@/components/SearchSelect";
 import { StateCardSkeleton } from "@/components/Skeleton";
 import { Button } from "@/components/ui/button";
 import { getStates, type State } from "@/data/mockData";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
     const [states, setStates] = useState<State[]>([]);
     const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
+    const navigate = useNavigate();
 
     useEffect(() => {
         getStates().then((data) => {
@@ -63,7 +67,7 @@ const Index = () => {
                                     <span>{states.length} States</span>
                                 </div>
                                 <span className="text-gold">•</span>
-                                <span>{states.reduce((acc, s) => acc + s.templeCount, 0)}+ Temples</span>
+                                <span>5 Temples</span>
                                 <span className="text-gold">•</span>
                                 <span>Live Crowd Data</span>
                             </div>
@@ -71,95 +75,147 @@ const Index = () => {
                     </div>
                 </section>
 
-                {/* Featured States */}
-                <section className="py-16 bg-muted/30">
-                    <div className="container">
-                        <div className="flex items-center justify-between mb-8">
-                            <div>
-                                <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-2">
-                                    Featured Destinations
-                                </h2>
-                                <p className="text-muted-foreground">
-                                    Popular states with rich temple heritage
-                                </p>
+                {/* Content - Protected or Sign In Prompt */}
+                {user ? (
+                    <>
+                        {/* Featured States */}
+                        <section className="py-16 bg-muted/30">
+                            <div className="container">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div>
+                                        <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-2">
+                                            Featured Destinations
+                                        </h2>
+                                        <p className="text-muted-foreground">
+                                            Popular states with rich temple heritage
+                                        </p>
+                                    </div>
+
+                                    <Button variant="ghost" className="hidden md:flex items-center gap-2">
+                                        View All
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {loading ? (
+                                        <>
+                                            <StateCardSkeleton />
+                                            <StateCardSkeleton />
+                                            <StateCardSkeleton />
+                                            <StateCardSkeleton />
+                                        </>
+                                    ) : (
+                                        featuredStates.map((state, index) => (
+                                            <StateCard key={state.id} state={state} index={index} />
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* All States */}
+                        <section className="py-16">
+                            <div className="container">
+                                <div className="mb-8">
+                                    <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-2">
+                                        All States
+                                    </h2>
+                                    <p className="text-muted-foreground">
+                                        Explore temples across every state
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {loading ? (
+                                        <>
+                                            <StateCardSkeleton />
+                                            <StateCardSkeleton />
+                                            <StateCardSkeleton />
+                                        </>
+                                    ) : (
+                                        states.map((state, index) => (
+                                            <StateCard key={state.id} state={state} index={index} />
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* CTA Section */}
+                        <section className="py-20 gradient-hero relative overflow-hidden">
+                            {/* Decorative elements */}
+                            <div className="absolute inset-0 opacity-10">
+                                <div className="absolute top-4 left-10 w-32 h-32 border-2 border-primary-foreground/30 rounded-full" />
+                                <div className="absolute bottom-4 right-10 w-24 h-24 border-2 border-primary-foreground/30 rounded-full" />
                             </div>
 
-                            <Button className="hidden md:flex items-center gap-2">
-                                View All
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                        </div>
+                            <div className="container relative">
+                                <div className="max-w-2xl mx-auto text-center">
+                                    <p className="font-devanagari text-lg text-primary-foreground/90 mb-2">॥ शुभारंभ ॥</p>
+                                    <h2 className="font-display text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+                                        Begin Your Sacred Journey
+                                    </h2>
+                                    <p className="text-primary-foreground/85 mb-8 text-lg">
+                                        Get real-time updates on temple crowds, plan your visit,
+                                        and make the most of your pilgrimage experience.
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+                    </>
+                ) : (
+                    /* Sign In Prompt for Unauthenticated Users */
+                    <section className="py-20">
+                        <div className="container">
+                            <div className="max-w-2xl mx-auto text-center">
+                                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <Lock className="h-10 w-10 text-primary" />
+                                </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {loading ? (
-                                <>
-                                    <StateCardSkeleton />
-                                    <StateCardSkeleton />
-                                    <StateCardSkeleton />
-                                    <StateCardSkeleton />
-                                </>
-                            ) : (
-                                featuredStates.map((state, index) => (
-                                    <StateCard key={state.id} state={state} index={index} />
-                                ))
-                            )}
-                        </div>
-                    </div>
-                </section>
+                                <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+                                    Sign In to Explore
+                                </h2>
+                                <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                                    Access real-time crowd data, temple information, and personalized recommendations
+                                    by signing in to your account.
+                                </p>
 
-                {/* All States */}
-                <section className="py-16">
-                    <div className="container">
-                        <div className="mb-8">
-                            <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-2">
-                                All States
-                            </h2>
-                            <p className="text-muted-foreground">
-                                Explore temples across every state
-                            </p>
-                        </div>
+                                {/* Features Preview */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                                    <div className="card-elevated p-6 text-center">
+                                        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-success/10 flex items-center justify-center">
+                                            <MapPin className="h-6 w-6 text-success" />
+                                        </div>
+                                        <h3 className="font-semibold mb-2">Temple Discovery</h3>
+                                        <p className="text-sm text-muted-foreground">Browse temples across all Indian states</p>
+                                    </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {loading ? (
-                                <>
-                                    <StateCardSkeleton />
-                                    <StateCardSkeleton />
-                                    <StateCardSkeleton />
-                                </>
-                            ) : (
-                                states.map((state, index) => (
-                                    <StateCard key={state.id} state={state} index={index} />
-                                ))
-                            )}
-                        </div>
-                    </div>
-                </section>
+                                    <div className="card-elevated p-6 text-center">
+                                        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-warning/10 flex items-center justify-center">
+                                            <Sparkles className="h-6 w-6 text-warning" />
+                                        </div>
+                                        <h3 className="font-semibold mb-2">Live Crowd Data</h3>
+                                        <p className="text-sm text-muted-foreground">Real-time visitor counts and predictions</p>
+                                    </div>
 
-                {/* CTA Section */}
-                <section className="py-20 gradient-hero relative overflow-hidden">
-                    {/* Decorative elements */}
-                    <div className="absolute inset-0 opacity-10">
-                        <div className="absolute top-4 left-10 w-32 h-32 border-2 border-primary-foreground/30 rounded-full" />
-                        <div className="absolute bottom-4 right-10 w-24 h-24 border-2 border-primary-foreground/30 rounded-full" />
-                    </div>
+                                    <div className="card-elevated p-6 text-center">
+                                        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                                            <ChevronRight className="h-6 w-6 text-primary" />
+                                        </div>
+                                        <h3 className="font-semibold mb-2">Smart Insights</h3>
+                                        <p className="text-sm text-muted-foreground">Best time recommendations for darshan</p>
+                                    </div>
+                                </div>
 
-                    <div className="container relative">
-                        <div className="max-w-2xl mx-auto text-center">
-                            <p className="font-devanagari text-lg text-primary-foreground/90 mb-2">॥ शुभारंभ ॥</p>
-                            <h2 className="font-display text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-                                Begin Your Sacred Journey
-                            </h2>
-                            <p className="text-primary-foreground/85 mb-8 text-lg">
-                                Get real-time updates on temple crowds, plan your visit,
-                                and make the most of your pilgrimage experience.
-                            </p>
-                            <Button className="shadow-xl">
-                                Explore Now
-                                <ChevronRight className="h-5 w-5" />
-                            </Button>
+                                <Button size="xl" onClick={() => navigate("/auth")}>
+                                    Sign In to Continue
+                                    <ChevronRight className="h-5 w-5" />
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                )}
             </main>
 
             <Footer />

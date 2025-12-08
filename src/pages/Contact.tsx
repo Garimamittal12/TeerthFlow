@@ -171,7 +171,8 @@ export default function Contact() {
 
                                     <Button
                                         type="submit"
-                                        className="w-full px-6 py-3 text-lg"
+                                        size="lg"
+                                        className="w-full"
                                         disabled={submitting}
                                     >
                                         {submitting ? "Sending..." : "Send Message"}

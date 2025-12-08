@@ -41,7 +41,7 @@ export default function Auth() {
         } catch (err) {
             if (err instanceof z.ZodError) {
                 const newErrors: { email?: string; password?: string } = {};
-                err.issues.forEach((e) => {
+                err.errors.forEach((e) => {
                     if (e.path[0] === "email") newErrors.email = e.message;
                     if (e.path[0] === "password") newErrors.password = e.message;
                 });

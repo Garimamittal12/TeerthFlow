@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Wifi, WifiOff, TrendingUp, Users, Clock, AlertTriangle, Play, Pause, Bell, BellOff } from "lucide-react";
+import { TrendingUp, Users, Clock, AlertTriangle, Bell, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { HistoricalChart } from "@/components/HistoricalChart";
 import type { Temple, Device, CrowdData } from "@/data/mockData";
 import { getCrowdLevel, CROWD_THRESHOLDS } from "@/data/mockData";
@@ -153,8 +152,9 @@ export function CrowdMonitor({ temple, device, initialCrowd }: CrowdMonitorProps
                         </div>
                     </div>
                     <Button
+                        size="sm"
                         onClick={handleEnableNotifications}
-                        className="bg-primary hover:bg-primary/90 text-sm px-3 py-1.5"
+                        className="bg-primary hover:bg-primary/90"
                     >
                         Enable
                     </Button>
@@ -184,97 +184,11 @@ export function CrowdMonitor({ temple, device, initialCrowd }: CrowdMonitorProps
                 </div>
             )}
 
-            {/* Device Status Card */}
-            <div className="card-elevated p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-display text-lg font-semibold">Device Status</h3>
-                    <div className="flex items-center gap-2">
-                        {/* Notification Status Indicator */}
-                        {isSupported && (
-                            <button
-                                onClick={permission !== "granted" ? handleEnableNotifications : undefined}
-                                className={cn(
-                                    "p-1.5 rounded-lg transition-colors",
-                                    permission === "granted"
-                                        ? "text-success bg-success/10"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
-                                )}
-                                title={permission === "granted" ? "Notifications enabled" : "Enable notifications"}
-                            >
-                                {permission === "granted" ? (
-                                    <Bell className="h-4 w-4" />
-                                ) : (
-                                    <BellOff className="h-4 w-4" />
-                                )}
-                            </button>
-                        )}
-
-                        {device?.isConnected ? (
-                            <span className="badge-live">
-                                <Wifi className="h-3.5 w-3.5" />
-                                Connected
-                            </span>
-                        ) : (
-                            <span className="badge-offline">
-                                <WifiOff className="h-3.5 w-3.5" />
-                                Offline
-                            </span>
-                        )}
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                        <p className="text-xs text-muted-foreground mb-1">Device ID</p>
-                        <p className="font-mono text-sm">{device?.id ?? "N/A"}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground mb-1">Last Ping</p>
-                        <p className="text-sm">
-                            {device?.lastPing
-                                ? new Date(device.lastPing).toLocaleTimeString()
-                                : "N/A"
-                            }
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground mb-1">Signal</p>
-                        <p className={cn(
-                            "text-sm font-medium",
-                            device?.signalStrength === "Excellent" && "text-success",
-                            device?.signalStrength === "Good" && "text-success",
-                            device?.signalStrength === "Fair" && "text-warning",
-                            device?.signalStrength === "Poor" && "text-destructive",
-                        )}>
-                            {device?.signalStrength ?? "N/A"}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground mb-1">Status</p>
-                        <p className="text-sm">{device?.isConnected ? "Online" : "Offline"}</p>
-                    </div>
-                </div>
-            </div>
 
             {/* Current Stats Card */}
             <div className="card-elevated p-6">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="font-display text-lg font-semibold">Current Crowd</h3>
-
-                    {/* Realtime Simulation Toggle */}
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm text-muted-foreground">Simulate</span>
-                        <Switch
-                            checked={isSimulating}
-                            onCheckedChange={setIsSimulating}
-                            aria-label="Toggle realtime simulation"
-                        />
-                        {isSimulating ? (
-                            <Pause className="h-4 w-4 text-primary animate-pulse" />
-                        ) : (
-                            <Play className="h-4 w-4 text-muted-foreground" />
-                        )}
-                    </div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -348,7 +262,14 @@ export function CrowdMonitor({ temple, device, initialCrowd }: CrowdMonitorProps
             {crowd && (
                 <div className="card-elevated p-6">
                     <h3 className="font-display text-lg font-semibold mb-4">24-Hour History</h3>
-                    <HistoricalChart data={crowd.history} capacity={temple.totalCapacity} />
+                    <HistoricalChart
+                        data={crowd.history}
+                        capacity={temple.totalCapacity}
+                        isRealtime={true}
+                    />
+                    <p className="text-xs text-muted-foreground mt-3 text-center">
+                        Chart updates automatically with real-time data from IoT sensors
+                    </p>
                 </div>
             )}
         </div>

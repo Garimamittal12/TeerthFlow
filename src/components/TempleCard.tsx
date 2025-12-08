@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { MapPin, Users, Wifi, WifiOff, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MiniSparkline } from "@/components/MiniSparkline";
 import type { Temple, Device, CrowdData } from "@/data/mockData";
 import { getCrowdLevel } from "@/data/mockData";
 import { cn } from "@/lib/utils";
@@ -90,15 +89,6 @@ export function TempleCard({ temple, device, crowd, index = 0 }: TempleCardProps
                     </span>
                 </div>
 
-                {/* Sparkline */}
-                {crowd && (
-                    <div className="mb-4 h-10">
-                        <MiniSparkline
-                            data={crowd.history.slice(-12).map(h => h.count)}
-                            crowdLevel={crowdLevel}
-                        />
-                    </div>
-                )}
 
                 {/* Capacity Bar */}
                 <div className="mb-4">
@@ -121,6 +111,8 @@ export function TempleCard({ temple, device, crowd, index = 0 }: TempleCardProps
                 </div>
 
                 <Button
+                    variant="default"
+                    size="sm"
                     className="w-full"
                     tabIndex={-1}
                 >

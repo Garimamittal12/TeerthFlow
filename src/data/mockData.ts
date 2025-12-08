@@ -58,12 +58,12 @@ export const getCrowdLevel = (count: number): CrowdData["crowdLevel"] => {
     return "Extreme";
 };
 
-// States data
+// States data - templeCount reflects actual temples in the temples array
 export const states: State[] = [
     {
         id: "uttar-pradesh",
         name: "Uttar Pradesh",
-        templeCount: 12,
+        templeCount: 2, // Kashi Vishwanath, Ayodhya Ram Mandir
         image: "https://images.unsplash.com/photo-1548013146-72479768bada?w=800&q=80",
         description: "Land of sacred rivers and ancient temples including Kashi Vishwanath",
         featured: true,
@@ -71,7 +71,7 @@ export const states: State[] = [
     {
         id: "rajasthan",
         name: "Rajasthan",
-        templeCount: 8,
+        templeCount: 1, // Birla Mandir
         image: "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800&q=80",
         description: "Royal state with magnificent temple architecture and rich heritage",
         featured: true,
@@ -79,7 +79,7 @@ export const states: State[] = [
     {
         id: "maharashtra",
         name: "Maharashtra",
-        templeCount: 15,
+        templeCount: 1, // Siddhivinayak Temple
         image: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=800&q=80",
         description: "Home to Shirdi Sai Baba Temple and Siddhivinayak",
         featured: true,
@@ -87,26 +87,10 @@ export const states: State[] = [
     {
         id: "gujarat",
         name: "Gujarat",
-        templeCount: 10,
+        templeCount: 1, // Somnath Temple
         image: "https://images.unsplash.com/photo-1621427642826-e92c2dca668e?w=800&q=80",
         description: "Spiritual land of Somnath and Dwarka temples",
         featured: true,
-    },
-    {
-        id: "tamil-nadu",
-        name: "Tamil Nadu",
-        templeCount: 20,
-        image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800&q=80",
-        description: "Temple state with spectacular Dravidian architecture",
-        featured: false,
-    },
-    {
-        id: "karnataka",
-        name: "Karnataka",
-        templeCount: 14,
-        image: "https://images.unsplash.com/photo-1590766940554-634f82dde4c7?w=800&q=80",
-        description: "Land of Hampi ruins and ancient temple complexes",
-        featured: false,
     },
 ];
 
@@ -244,20 +228,27 @@ export const devices: Device[] = [
     },
 ];
 
-// Generate historical data for crowd
-const generateHistory = (baseCount: number): { time: string; count: number }[] => {
+// Generate historical data for crowd - ensures last point matches currentCount
+const generateHistory = (currentCount: number): { time: string; count: number }[] => {
     const history = [];
     const now = new Date();
 
-    for (let i = 23; i >= 0; i--) {
+    // Generate 23 hours of history with variations
+    for (let i = 23; i >= 1; i--) {
         const time = new Date(now.getTime() - i * 3600000);
         const variation = Math.floor(Math.random() * 100) - 50;
-        const count = Math.max(0, baseCount + variation);
+        const count = Math.max(0, currentCount + variation);
         history.push({
             time: time.toISOString(),
             count,
         });
     }
+
+    // Add current point as the last entry to sync with currentCount
+    history.push({
+        time: now.toISOString(),
+        count: currentCount,
+    });
 
     return history;
 };

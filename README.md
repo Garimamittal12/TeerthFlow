@@ -1,14 +1,73 @@
-# 🛕 TeerthFlow  
+# Welcome to your Lovable project
 
-A modern, responsive web application for discovering and exploring Hindu pilgrimage sites (Teerths) across India. Built with **React**, **TypeScript**, and modern web technologies.  
+## Project info
 
-![TeerthFlow](https://img.shields.io/badge/TeerthFlow-Pilgrimage%20Guide-blue) ![React](https://img.shields.io/badge/React-18.2.0-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue) ![Vite](https://img.shields.io/badge/Vite-4.4.0-purple)
+**URL**: https://lovable.dev/projects/6e8953b0-c958-44a5-975d-a55545189fbe
 
----
+## How can I edit this code?
 
-## 📸 Project Overview  
-## Crowd Level Detection Dashboard for Temples  
+There are several ways of editing your application.
 
-A real-time crowd monitoring and visualization system using **ESP8266-based IR sensors**, a **Flask backend**, and a **React frontend**.  
-Designed to help pilgrims and administrators monitor people counts and crowd levels in temples.  
-<br>
+**Use Lovable**
+
+Simply visit the [Lovable Project](https://lovable.dev/projects/6e8953b0-c958-44a5-975d-a55545189fbe) and start prompting.
+
+Changes made via Lovable will be committed automatically to this repo.
+
+**Use your preferred IDE**
+
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+Follow these steps:
+
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
+```
+
+**Edit a file directly in GitHub**
+
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
+
+**Use GitHub Codespaces**
+
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
+
+## What technologies are used for this project?
+
+This project is built with:
+
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
+
+## How can I deploy this project?
+
+Simply open [Lovable](https://lovable.dev/projects/6e8953b0-c958-44a5-975d-a55545189fbe) and click on Share -> Publish.
+
+## Can I connect a custom domain to my Lovable project?
+
+Yes, you can!
+
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
