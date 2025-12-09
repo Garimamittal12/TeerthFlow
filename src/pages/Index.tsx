@@ -47,12 +47,12 @@ const Index = () => {
                             </div>
 
                             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
-                                Discover Sacred Temples{" "}
+                                Discover Sacred Pilgrimage Sites{" "}
                                 <span className="text-gradient">Across India</span>
                             </h1>
 
                             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-                                Plan your pilgrimage with real-time crowd insights, temple information,
+                                Plan your pilgrimage with real-time crowd insights, Pilgrimage Site information,
                                 and smart recommendations. Experience divine <span className="font-medium text-foreground">darshan</span> without the wait.
                             </p>
 
@@ -67,7 +67,7 @@ const Index = () => {
                                     <span>{states.length} States</span>
                                 </div>
                                 <span className="text-gold">•</span>
-                                <span>5 Temples</span>
+                                <span>5 Pilgrimage Sites</span>
                                 <span className="text-gold">•</span>
                                 <span>Live Crowd Data</span>
                             </div>
@@ -87,7 +87,7 @@ const Index = () => {
                                             Featured Destinations
                                         </h2>
                                         <p className="text-muted-foreground">
-                                            Popular states with rich temple heritage
+                                            Popular states with rich heritage
                                         </p>
                                     </div>
 
@@ -122,7 +122,7 @@ const Index = () => {
                                         All States
                                     </h2>
                                     <p className="text-muted-foreground">
-                                        Explore temples across every state
+                                        Explore Pilgrimage Sites across every state
                                     </p>
                                 </div>
 
@@ -157,7 +157,7 @@ const Index = () => {
                                         Begin Your Sacred Journey
                                     </h2>
                                     <p className="text-primary-foreground/85 mb-8 text-lg">
-                                        Get real-time updates on temple crowds, plan your visit,
+                                        Get real-time updates on pilgrimage sites crowds, plan your visit,
                                         and make the most of your pilgrimage experience.
                                     </p>
                                 </div>
@@ -177,7 +177,7 @@ const Index = () => {
                                     Sign In to Explore
                                 </h2>
                                 <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                                    Access real-time crowd data, temple information, and personalized recommendations
+                                    Access real-time crowd data, pilgrimage site information, and personalized recommendations
                                     by signing in to your account.
                                 </p>
 
@@ -187,8 +187,8 @@ const Index = () => {
                                         <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-success/10 flex items-center justify-center">
                                             <MapPin className="h-6 w-6 text-success" />
                                         </div>
-                                        <h3 className="font-semibold mb-2">Temple Discovery</h3>
-                                        <p className="text-sm text-muted-foreground">Browse temples across all Indian states</p>
+                                        <h3 className="font-semibold mb-2">Pilgrimage Site Discovery</h3>
+                                        <p className="text-sm text-muted-foreground">Browse Pilgrimage Sites across all Indian states</p>
                                     </div>
 
                                     <div className="card-elevated p-6 text-center">

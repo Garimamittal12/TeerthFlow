@@ -103,8 +103,8 @@ export default function Auth() {
                         </h1>
                         <p className="text-muted-foreground">
                             {isLogin
-                                ? "Sign in to access your saved temples and preferences"
-                                : "Create an account to save temples and get crowd alerts"}
+                                ? "Sign in to access your account and explore pilgrimage sites."
+                                : "Create an account to explore pilgrimage sites and get crowd alerts"}
                         </p>
                     </div>
 
@@ -196,21 +196,6 @@ export default function Auth() {
                             >
                                 {isLogin ? "Create one now" : "Sign in instead"}
                             </button>
-                        </div>
-                    </div>
-
-                    {/* Features Preview */}
-                    <div className="mt-8 text-center">
-                        <p className="text-sm text-muted-foreground mb-4">What you can do with an account:</p>
-                        <div className="flex flex-wrap justify-center gap-3">
-                            {["Save Favorites", "Crowd Alerts", "Visit History"].map((feature) => (
-                                <span
-                                    key={feature}
-                                    className="px-3 py-1.5 bg-primary/10 text-primary text-sm rounded-full font-medium"
-                                >
-                                    {feature}
-                                </span>
-                            ))}
                         </div>
                     </div>
                 </div>

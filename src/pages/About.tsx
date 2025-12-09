@@ -56,7 +56,7 @@ export default function About() {
                             <p className="text-muted-foreground text-center leading-relaxed">
                                 TeerthFlow bridges ancient spirituality with modern technology. We provide
                                 real-time crowd monitoring, historical data analysis, and smart predictions
-                                to help millions of pilgrims plan their temple visits efficiently. Our IoT-powered
+                                to help millions of pilgrims plan their visits efficiently. Our IoT-powered
                                 platform ensures you can experience divine darshan without unnecessary waiting.
                             </p>
                         </div>
@@ -102,7 +102,7 @@ export default function About() {
                             </div>
                             <div>
                                 <p className="font-display text-4xl font-bold text-primary">50+</p>
-                                <p className="text-muted-foreground">Temples Monitored</p>
+                                <p className="text-muted-foreground">Pilgrimage Sites Monitored</p>
                             </div>
                             <div>
                                 <p className="font-display text-4xl font-bold text-primary">24/7</p>
