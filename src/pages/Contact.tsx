@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -184,8 +183,6 @@ export default function Contact() {
                     </div>
                 </section>
             </main>
-
-            <Footer />
         </div>
     );
 }

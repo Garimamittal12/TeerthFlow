@@ -14,6 +14,7 @@ export default {
         },
         extend: {
             fontFamily: {
+                // Unified primary font across the app
                 sans: [
                     'Source Sans 3',
                     'ui-sans-serif',
@@ -24,21 +25,31 @@ export default {
                     'Segoe UI Symbol',
                     'Noto Color Emoji'
                 ],
+                // Map "display" and generic "serif" to the same primary family
+                // so headings and body share one consistent font.
                 display: [
-                    'Cormorant Garamond',
-                    'Georgia',
-                    'serif'
-                ],
-                devanagari: [
-                    'Tiro Devanagari Hindi',
-                    'serif'
+                    'Source Sans 3',
+                    'ui-sans-serif',
+                    'system-ui',
+                    'sans-serif',
+                    'Apple Color Emoji',
+                    'Segoe UI Emoji',
+                    'Segoe UI Symbol',
+                    'Noto Color Emoji'
                 ],
                 serif: [
-                    'Cormorant Garamond',
-                    'Georgia',
-                    'Cambria',
-                    'Times New Roman',
-                    'Times',
+                    'Source Sans 3',
+                    'ui-sans-serif',
+                    'system-ui',
+                    'sans-serif',
+                    'Apple Color Emoji',
+                    'Segoe UI Emoji',
+                    'Segoe UI Symbol',
+                    'Noto Color Emoji'
+                ],
+                // Keep Devanagari and mono specialized where explicitly used
+                devanagari: [
+                    'Tiro Devanagari Hindi',
                     'serif'
                 ],
                 mono: [

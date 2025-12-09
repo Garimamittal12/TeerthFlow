@@ -39,9 +39,9 @@ export function ItineraryMap({ stops, startCoords, onTempleSelect }: ItineraryMa
                 map.addControl(new mapboxgl.default.NavigationControl(), "top-right");
 
                 map.on("load", () => {
-                    // Add start marker
+                    // Add start marker (use theme-aligned saffron tone instead of default green)
                     if (startCoords) {
-                        new mapboxgl.default.Marker({ color: "#22c55e" })
+                        new mapboxgl.default.Marker({ color: "#f97316" })
                             .setLngLat([startCoords.lng, startCoords.lat])
                             .setPopup(new mapboxgl.default.Popup().setHTML("<strong>Start Location</strong>"))
                             .addTo(map);
@@ -56,7 +56,8 @@ export function ItineraryMap({ stops, startCoords, onTempleSelect }: ItineraryMa
                             const el = document.createElement("div");
                             el.className = "flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm cursor-pointer shadow-lg";
                             el.textContent = (index + 1).toString();
-                            el.style.border = stop.isLocked ? "3px solid #f59e0b" : "2px solid white";
+                            // Use a saffron/gold border for locked markers to stay within the app theme
+                            el.style.border = stop.isLocked ? "3px solid #f97316" : "2px solid white";
 
                             el.addEventListener("click", () => {
                                 onTempleSelect?.(stop.templeId);

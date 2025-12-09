@@ -5,12 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-import { ItineraryMap } from "@/components/itinerary/ItineraryMap";
 import { DayItineraryCard } from "@/components/itinerary/DayItineraryCard";
-import { RecommendationPanel } from "@/components/recommendations/RecommendationPanel";
 import { temples } from "@/data/mockData";
 import { majorCities, templeLocations, calculateDistance, estimateTravelTime } from "@/data/itineraryData";
 import type { Itinerary, DayItinerary, ItineraryStop, RitualTiming } from "@/data/itineraryData";
@@ -26,8 +22,6 @@ export default function ItineraryPlanner() {
     const [startLocation, setStartLocation] = useState<string>("Delhi");
     const [selectedTemples, setSelectedTemples] = useState<string[]>([]);
     const [itinerary, setItinerary] = useState<Itinerary | null>(null);
-    const [selectedTempleForRec, setSelectedTempleForRec] = useState<string | undefined>();
-    const [activeTab, setActiveTab] = useState("planner");
     const startCity = majorCities.find(c => c.name === startLocation);
     const tripDays = Math.max(1, differenceInDays(new Date(endDate), new Date(startDate)) + 1);
 
@@ -136,15 +130,8 @@ export default function ItineraryPlanner() {
         });
     };
     const handleSwap = (stopId: string) => {
-        toast.info("Swap feature: Opens alternative temples panel");
-        // Find the stop and set it for recommendations
-        itinerary?.days.forEach(day => {
-            const stop = day.stops.find(s => s.id === stopId);
-            if (stop) {
-                setSelectedTempleForRec(stop.templeId);
-                setActiveTab("recommendations");
-            }
-        });
+        toast.info("Swap feature coming soon for itinerary optimization");
+        // In the future this can reshuffle stops within the itinerary day
     };
     const handleSelectRitual = (stopId: string, ritual: RitualTiming) => {
         if (!itinerary) return;
@@ -162,16 +149,112 @@ export default function ItineraryPlanner() {
     };
     const handleDownload = () => {
         if (!itinerary) return;
-        const data = JSON.stringify(itinerary, null, 2);
-        const blob = new Blob([data], {
-            type: "application/json"
+
+        // Create a simple flowchart-style image on a canvas
+        const canvas = document.createElement("canvas");
+        const width = 1200;
+        const baseMargin = 40;
+        const dayHeaderHeight = 50;
+        const stopHeight = 80;
+        const vGap = 24;
+
+        // Calculate dynamic height
+        const totalStops = itinerary.days.reduce((sum, d) => sum + d.stops.length, 0);
+        const height = Math.max(
+            800,
+            baseMargin * 2 + itinerary.days.length * dayHeaderHeight + totalStops * (stopHeight + vGap),
+        );
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        // Background
+        ctx.fillStyle = "#fdf7ef";
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.font = "24px Source Sans 3, sans-serif";
+        ctx.fillStyle = "#5c3b10";
+        ctx.fillText("TeerthFlow - Itinerary", baseMargin, baseMargin);
+        ctx.font = "16px Source Sans 3, sans-serif";
+        ctx.fillText(
+            `${itinerary.startDate} → ${itinerary.endDate} | Start: ${itinerary.startLocation}`,
+            baseMargin,
+            baseMargin + 26,
+        );
+
+        let y = baseMargin + 60;
+
+        itinerary.days.forEach((day, dayIdx) => {
+            // Day header
+            ctx.fillStyle = "#f7c266";
+            ctx.strokeStyle = "#c17f1c";
+            ctx.lineWidth = 2;
+            ctx.fillRect(baseMargin, y, width - baseMargin * 2, dayHeaderHeight);
+            ctx.strokeRect(baseMargin, y, width - baseMargin * 2, dayHeaderHeight);
+
+            ctx.fillStyle = "#3b2b1a";
+            ctx.font = "18px Source Sans 3, sans-serif";
+            ctx.fillText(`Day ${day.day} - ${format(new Date(day.date), "MMM d, yyyy")}`, baseMargin + 16, y + 32);
+
+            y += dayHeaderHeight + 12;
+
+            day.stops.forEach((stop, stopIdx) => {
+                const boxWidth = width - baseMargin * 2 - 40;
+                const boxX = baseMargin + 20;
+                const boxY = y;
+
+                // Box
+                ctx.fillStyle = "#ffffff";
+                ctx.strokeStyle = "#d9b370";
+                ctx.lineWidth = 2;
+                ctx.fillRect(boxX, boxY, boxWidth, stopHeight);
+                ctx.strokeRect(boxX, boxY, boxWidth, stopHeight);
+
+                // Text
+                ctx.fillStyle = "#1f140d";
+                ctx.font = "16px Source Sans 3, sans-serif";
+                ctx.fillText(`${stop.templeName || stop.templeId}`, boxX + 14, boxY + 24);
+                ctx.font = "13px Source Sans 3, sans-serif";
+                ctx.fillText(
+                    `${stop.arrivalTime} - ${stop.departureTime}  •  ${Math.round(stop.distance)} km`,
+                    boxX + 14,
+                    boxY + 45,
+                );
+                if (stop.selectedRitual?.name) {
+                    ctx.fillText(`Ritual: ${stop.selectedRitual.name}`, boxX + 14, boxY + 64);
+                }
+
+                // Connector arrow to next stop
+                if (stopIdx < day.stops.length - 1) {
+                    const arrowY = boxY + stopHeight + 6;
+                    ctx.strokeStyle = "#c17f1c";
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(boxX + boxWidth / 2, arrowY);
+                    ctx.lineTo(boxX + boxWidth / 2, arrowY + vGap - 12);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(boxX + boxWidth / 2 - 6, arrowY + vGap - 14);
+                    ctx.lineTo(boxX + boxWidth / 2, arrowY + vGap - 6);
+                    ctx.lineTo(boxX + boxWidth / 2 + 6, arrowY + vGap - 14);
+                    ctx.fillStyle = "#c17f1c";
+                    ctx.fill();
+                }
+
+                y += stopHeight + vGap;
+            });
+
+            y += 12;
         });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `teerthflow-itinerary-${format(new Date(), "yyyy-MM-dd")}.json`;
-        a.click();
-        toast.success("Itinerary downloaded!");
+
+        const dataUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = `teerthflow-itinerary-${format(new Date(), "yyyy-MM-dd")}.png`;
+        link.click();
+        toast.success("Itinerary image downloaded");
     };
     const allStops = itinerary?.days.flatMap(d => d.stops) || [];
     if (!user) {
@@ -189,7 +272,6 @@ export default function ItineraryPlanner() {
                     </Link>
                 </div>
             </main>
-            <Footer />
         </div>;
     }
     return <div className="min-h-screen flex flex-col bg-background">
@@ -205,124 +287,86 @@ export default function ItineraryPlanner() {
                 </p>
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="grid w-full max-w-md grid-cols-2">
-                    <TabsTrigger value="planner">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Planner
-                    </TabsTrigger>
-                    <TabsTrigger value="recommendations">
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Recommendations
-                    </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="planner" className="space-y-6">
-                    {/* Trip Configuration */}
-                    <div className="card-elevated p-6">
-                        <h2 className="font-display text-xl font-semibold mb-4">Trip Details</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div>
-                                <Label htmlFor="start-date">Start Date</Label>
-                                <Input id="start-date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1" />
-                            </div>
-                            <div>
-                                <Label htmlFor="end-date">End Date</Label>
-                                <Input id="end-date" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} min={startDate} className="mt-1" />
-                            </div>
-                            <div>
-                                <Label htmlFor="start-location">Start Location</Label>
-                                <Select value={startLocation} onValueChange={setStartLocation}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {majorCities.map(city => <SelectItem key={city.name} value={city.name}>
-                                            {city.name}
-                                        </SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="flex items-end">
-                                <Button onClick={generateItinerary} className="w-full">
-                                    <Sparkles className="h-4 w-4 mr-2" />
-                                    Generate Itinerary
-                                </Button>
-                            </div>
+            <div className="space-y-6">
+                {/* Trip Configuration */}
+                <div className="card-elevated p-6">
+                    <h2 className="font-display text-xl font-semibold mb-4">Trip Details</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <Label htmlFor="start-date">Start Date</Label>
+                            <Input id="start-date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="end-date">End Date</Label>
+                            <Input id="end-date" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} min={startDate} className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="start-location">Start Location</Label>
+                            <Select value={startLocation} onValueChange={setStartLocation}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {majorCities.map(city => <SelectItem key={city.name} value={city.name}>
+                                        {city.name}
+                                    </SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex items-end">
+                            <Button onClick={generateItinerary} className="w-full">
+                                <Sparkles className="h-4 w-4 mr-2" />
+                                Generate Itinerary
+                            </Button>
                         </div>
                     </div>
+                </div>
 
-                    {/* Temple Selection */}
-                    <div className="card-elevated p-6">
-                        <h2 className="font-display text-xl font-semibold mb-4">Select Temples</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {temples.map(temple => <button key={temple.id} onClick={() => toggleTempleSelection(temple.id)} className={`p-4 rounded-xl text-left transition-all border ${selectedTemples.includes(temple.id) ? "bg-primary/10 border-primary ring-2 ring-primary/20" : "bg-card border-border hover:bg-muted"}`}>
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedTemples.includes(temple.id) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                                        {selectedTemples.includes(temple.id) ? <span className="font-bold">{selectedTemples.indexOf(temple.id) + 1}</span> : <Plus className="h-5 w-5" />}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium truncate">{temple.name}</p>
-                                        <p className="text-sm text-muted-foreground">{temple.city}</p>
-                                    </div>
+                {/* Temple Selection */}
+                <div className="card-elevated p-6">
+                    <h2 className="font-display text-xl font-semibold mb-4">Select Temples</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {temples.map(temple => <button key={temple.id} onClick={() => toggleTempleSelection(temple.id)} className={`p-4 rounded-xl text-left transition-all border ${selectedTemples.includes(temple.id) ? "bg-primary/10 border-primary ring-2 ring-primary/20" : "bg-card border-border hover:bg-muted"}`}>
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedTemples.includes(temple.id) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                                    {selectedTemples.includes(temple.id) ? <span className="font-bold">{selectedTemples.indexOf(temple.id) + 1}</span> : <Plus className="h-5 w-5" />}
                                 </div>
-                            </button>)}
-                        </div>
-                    </div>
-
-                    {/* Generated Itinerary */}
-                    {itinerary && <>
-                        {/* Actions */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                <span>{tripDays} Days</span>
-                                <span>•</span>
-                                <span>{selectedTemples.length} Temples</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm" onClick={handleDownload}>
-                                    <Download className="h-4 w-4 mr-1.5" />
-                                    Download
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                    <Share2 className="h-4 w-4 mr-1.5" />
-                                    Share
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Map */}
-
-
-                        {/* Day-by-Day Itinerary */}
-                        <div className="space-y-8">
-                            {itinerary.days.map(day => <DayItineraryCard key={day.day} dayItinerary={day} onToggleLock={handleToggleLock} onSwap={handleSwap} onSelectRitual={handleSelectRitual} />)}
-                        </div>
-                    </>}
-                </TabsContent>
-
-                <TabsContent value="recommendations">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Temple Selection for Recommendations */}
-                        <div className="lg:col-span-1 card-elevated p-4">
-                            <h3 className="font-display font-semibold mb-4">Select Temple</h3>
-                            <div className="space-y-2">
-                                {temples.map(temple => <button key={temple.id} onClick={() => setSelectedTempleForRec(temple.id)} className={`w-full p-3 rounded-lg text-left transition-all border ${selectedTempleForRec === temple.id ? "bg-primary/10 border-primary" : "bg-card border-border hover:bg-muted"}`}>
-                                    <p className="font-medium">{temple.name}</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">{temple.name}</p>
                                     <p className="text-sm text-muted-foreground">{temple.city}</p>
-                                </button>)}
+                                </div>
                             </div>
-                        </div>
+                        </button>)}
+                    </div>
+                </div>
 
-                        {/* Recommendations Panel */}
-                        <div className="lg:col-span-2 card-elevated p-4">
-                            <RecommendationPanel selectedTempleId={selectedTempleForRec} currentTime={format(new Date(), "HH:mm")} />
+                {/* Generated Itinerary */}
+                {itinerary && <>
+                    {/* Actions */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>{tripDays} Days</span>
+                            <span>•</span>
+                            <span>{selectedTemples.length} Temples</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={handleDownload}>
+                                <Download className="h-4 w-4 mr-1.5" />
+                                Download
+                            </Button>
+                            <Button variant="outline" size="sm">
+                                <Share2 className="h-4 w-4 mr-1.5" />
+                                Share
+                            </Button>
                         </div>
                     </div>
-                </TabsContent>
-            </Tabs>
-        </main>
 
-        <Footer />
+                    {/* Day-by-Day Itinerary */}
+                    <div className="space-y-8">
+                        {itinerary.days.map(day => <DayItineraryCard key={day.day} dayItinerary={day} onToggleLock={handleToggleLock} onSwap={handleSwap} onSelectRitual={handleSelectRitual} />)}
+                    </div>
+                </>}
+            </div>
+        </main>
     </div>;
 }

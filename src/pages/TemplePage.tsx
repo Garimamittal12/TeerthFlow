@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { MapPin, Clock, Calendar, Building2, Star, Image as ImageIcon } from "lucide-react";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { Breadcrumb } from "@/components/Breadcrumbs";
 import { CrowdMonitor } from "@/components/CrowdMonitor";
 import { Button } from "@/components/ui/button";
+import { RecommendationPanel } from "@/components/recommendations/RecommendationPanel";
 import {
     getTempleById,
     getStateById,
@@ -65,7 +65,6 @@ export default function TemplePage() {
                         </div>
                     </div>
                 </main>
-                <Footer />
             </div>
         );
     }
@@ -85,7 +84,6 @@ export default function TemplePage() {
                         <Button onClick={() => window.history.back()}>Go Back</Button>
                     </div>
                 </main>
-                <Footer />
             </div>
         );
     }
@@ -153,6 +151,17 @@ export default function TemplePage() {
                         <div className="lg:col-span-2 space-y-8">
                             {/* Crowd Monitor */}
                             <CrowdMonitor temple={temple} device={device} initialCrowd={crowd} />
+
+                            {/* Nearby Recommendations based on live crowd */}
+                            <div className="card-elevated p-6">
+                                <h3 className="font-display text-lg font-semibold mb-4">
+                                    Nearby Alternatives
+                                </h3>
+                                <RecommendationPanel
+                                    selectedTempleId={temple.id}
+                                    currentTime={new Date().toISOString().slice(11, 16)}
+                                />
+                            </div>
                         </div>
 
                         {/* Sidebar */}
@@ -244,8 +253,6 @@ export default function TemplePage() {
                     </div>
                 </div>
             </main>
-
-            <Footer />
         </div>
     );
 }

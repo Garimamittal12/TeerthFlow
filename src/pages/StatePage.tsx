@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { Breadcrumb } from "@/components/Breadcrumbs";
 import { TempleCard } from "@/components/TempleCard";
 import { TempleCardSkeleton } from "@/components/Skeleton";
@@ -131,7 +130,6 @@ export default function StatePage() {
                         <Button onClick={() => window.history.back()}>Go Back</Button>
                     </div>
                 </main>
-                <Footer />
             </div>
         );
     }
@@ -264,8 +262,6 @@ export default function StatePage() {
                     </div>
                 </section>
             </main>
-
-            <Footer />
         </div>
     );
 }

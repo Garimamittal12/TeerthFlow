@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapPin, ChevronRight, Sparkles, Lock } from "lucide-react";
+import { MapPin, ChevronRight, Sparkles, Lock, Search } from "lucide-react";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { StateCard } from "@/components/StateCard";
 import { SearchSelect } from "@/components/SearchSelect";
 import { StateCardSkeleton } from "@/components/Skeleton";
@@ -13,6 +12,8 @@ import { useAuth } from "@/hooks/useAuth";
 const Index = () => {
     const [states, setStates] = useState<State[]>([]);
     const [loading, setLoading] = useState(true);
+    const [allStatesSearch, setAllStatesSearch] = useState("");
+    const [showAllStates, setShowAllStates] = useState(false);
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -24,6 +25,19 @@ const Index = () => {
     }, []);
 
     const featuredStates = states.filter((s) => s.featured);
+    const filteredAllStates = useMemo(
+        () =>
+            !allStatesSearch
+                ? states
+                : states.filter((s) =>
+                    s.name.toLowerCase().includes(allStatesSearch.toLowerCase())
+                ),
+        [states, allStatesSearch]
+    );
+    const visibleAllStates = useMemo(
+        () => (showAllStates ? filteredAllStates : filteredAllStates.slice(0, 4)),
+        [filteredAllStates, showAllStates]
+    );
 
     return (
         <div className="min-h-screen flex flex-col bg-background">
@@ -91,7 +105,16 @@ const Index = () => {
                                         </p>
                                     </div>
 
-                                    <Button variant="ghost" className="hidden md:flex items-center gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        className="hidden md:flex items-center gap-2"
+                                        onClick={() => {
+                                            const el = document.getElementById("all-states-section");
+                                            if (el) {
+                                                el.scrollIntoView({ behavior: "smooth", block: "start" });
+                                            }
+                                        }}
+                                    >
                                         View All
                                         <ChevronRight className="h-4 w-4" />
                                     </Button>
@@ -115,15 +138,52 @@ const Index = () => {
                         </section>
 
                         {/* All States */}
-                        <section className="py-16">
+                        <section id="all-states-section" className="py-16">
                             <div className="container">
-                                <div className="mb-8">
-                                    <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-2">
-                                        All States
-                                    </h2>
-                                    <p className="text-muted-foreground">
-                                        Explore Pilgrimage Sites across every state
-                                    </p>
+                                <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                                    <div>
+                /                       <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-2">
+                                            All States
+                                        </h2>
+                                        <p className="text-muted-foreground">
+                                            Explore Pilgrimage Sites across every state
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-col md:flex-row md:items-center gap-3 w-full md:w-auto">
+                                        {/* Inline filter for All States grid */}
+                                        <div className="w-full md:w-72">
+                                            <label className="block text-xs font-medium text-muted-foreground mb-1">
+                                                Search state
+                                            </label>
+                                            <div className="flex items-center gap-2 px-3 py-2 bg-card rounded-xl border border-border focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                                                <Search className="h-4 w-4 text-muted-foreground" />
+                                                <input
+                                                    type="text"
+                                                    value={allStatesSearch}
+                                                    onChange={(e) => {
+                                                        setAllStatesSearch(e.target.value);
+                                                        if (!showAllStates && e.target.value) {
+                                                            setShowAllStates(true);
+                                                        }
+                                                    }}
+                                                    placeholder="Type a state name..."
+                                                    className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* View all / collapse toggle */}
+                                        {filteredAllStates.length > 4 && !allStatesSearch && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setShowAllStates(!showAllStates)}
+                                            >
+                                                {showAllStates ? "Show fewer" : "View all states"}
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -133,8 +193,12 @@ const Index = () => {
                                             <StateCardSkeleton />
                                             <StateCardSkeleton />
                                         </>
+                                    ) : filteredAllStates.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">
+                                            No states match your search.
+                                        </p>
                                     ) : (
-                                        states.map((state, index) => (
+                                        visibleAllStates.map((state, index) => (
                                             <StateCard key={state.id} state={state} index={index} />
                                         ))
                                     )}
@@ -217,8 +281,6 @@ const Index = () => {
                     </section>
                 )}
             </main>
-
-            <Footer />
         </div>
     );
 };

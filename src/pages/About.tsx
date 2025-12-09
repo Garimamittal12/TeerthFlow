@@ -1,5 +1,4 @@
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { MapPin, Users, Wifi, TrendingUp } from "lucide-react";
 
 const features = [
@@ -116,8 +115,6 @@ export default function About() {
                     </div>
                 </section>
             </main>
-
-            <Footer />
         </div>
     );
 }

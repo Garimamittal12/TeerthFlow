@@ -15,8 +15,8 @@ import {
 
 const navItems = [
     { label: "Home", path: "/", icon: Home },
-    { label: "Itinerary", path: "/itinerary", icon: Calendar },
     { label: "About", path: "/about", icon: Info },
+    { label: "Itinerary", path: "/itinerary", icon: Calendar },
     { label: "Contact", path: "/contact", icon: Mail },
 ];
 
@@ -49,7 +49,7 @@ export function Header() {
                 </Link>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
+                <nav className="hidden md:flex items-center gap-0.5" aria-label="Main navigation">
                     {navItems.map((item) => {
                         const isActive = location.pathname === item.path;
                         return (
@@ -57,7 +57,7 @@ export function Header() {
                                 key={item.path}
                                 to={item.path}
                                 className={cn(
-                                    "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
+                                    "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[0.95rem] font-medium transition-all duration-200",
                                     isActive
                                         ? "bg-primary/10 text-primary"
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted"
