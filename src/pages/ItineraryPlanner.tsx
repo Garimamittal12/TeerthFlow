@@ -7,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Header } from "@/components/Header";
 import { DayItineraryCard } from "@/components/itinerary/DayItineraryCard";
-import { temples } from "@/data/mockData";
-import { majorCities, templeLocations, calculateDistance, estimateTravelTime } from "@/data/itineraryData";
+import { temples, getTemplesByCity } from "@/data/mockData";
+import { majorCities, templeLocations, calculateDistance, estimateTravelTime, getTempleLocation } from "@/data/itineraryData";
 import type { Itinerary, DayItinerary, ItineraryStop, RitualTiming } from "@/data/itineraryData";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
+import type { Temple } from "@/data/mockData";
+
 export default function ItineraryPlanner() {
     const {
         user
@@ -22,8 +24,30 @@ export default function ItineraryPlanner() {
     const [startLocation, setStartLocation] = useState<string>("Delhi");
     const [selectedTemples, setSelectedTemples] = useState<string[]>([]);
     const [itinerary, setItinerary] = useState<Itinerary | null>(null);
+    const [availableTemples, setAvailableTemples] = useState<Temple[]>([]);
+    const [loadingTemples, setLoadingTemples] = useState(false);
     const startCity = majorCities.find(c => c.name === startLocation);
     const tripDays = Math.max(1, differenceInDays(new Date(endDate), new Date(startDate)) + 1);
+
+    // Load temples for selected city
+    useEffect(() => {
+        if (!startLocation) return;
+        
+        setLoadingTemples(true);
+        setSelectedTemples([]); // Clear selection when city changes
+        
+        // Find temples in the selected city
+        const cityTemples = temples.filter(t => 
+            t.city.toLowerCase() === startLocation.toLowerCase()
+        );
+        
+        setAvailableTemples(cityTemples);
+        setLoadingTemples(false);
+        
+        if (cityTemples.length === 0) {
+            toast.info(`No pilgrimage sites found in ${startLocation}. Please select a different city.`);
+        }
+    }, [startLocation]);
 
     // Generate itinerary
     const generateItinerary = useCallback(() => {
@@ -31,8 +55,9 @@ export default function ItineraryPlanner() {
             toast.error("Please select at least one temple");
             return;
         }
+        
         const days: DayItinerary[] = [];
-        const templesPerDay = Math.ceil(selectedTemples.length / tripDays);
+        const templesPerDay = Math.max(1, Math.ceil(selectedTemples.length / tripDays));
         let previousCoords = startCity ? {
             lat: startCity.lat,
             lng: startCity.lng
@@ -40,24 +65,63 @@ export default function ItineraryPlanner() {
             lat: 28.6139,
             lng: 77.209
         };
+        
+        // Distribute temples across days, ensuring all are included
+        const remainingTemples = [...selectedTemples];
+        
         for (let day = 1; day <= tripDays; day++) {
-            const dayTemples = selectedTemples.slice((day - 1) * templesPerDay, day * templesPerDay);
+            // Calculate how many temples for this day
+            const remainingDays = tripDays - day + 1;
+            const templesForThisDay = remainingDays === 1 
+                ? remainingTemples.length 
+                : Math.min(templesPerDay, remainingTemples.length);
+            
+            const dayTemples = remainingTemples.splice(0, templesForThisDay);
+            if (dayTemples.length === 0) break;
+            
             const stops: ItineraryStop[] = [];
             let totalTravelTime = 0;
             let totalDistance = 0;
             let currentTime = 6 * 60; // Start at 6:00 AM in minutes
+            let dayPreviousCoords = previousCoords;
 
-            dayTemples.forEach(templeId => {
+            dayTemples.forEach((templeId, index) => {
                 const temple = temples.find(t => t.id === templeId);
-                const location = templeLocations.find(l => l.templeId === templeId);
-                if (!temple || !location) return;
-                const distance = calculateDistance(previousCoords.lat, previousCoords.lng, location.lat, location.lng);
+                if (!temple) return;
+                
+                // Get location, generate if missing
+                let location = templeLocations.find(l => l.templeId === templeId);
+                if (!location) {
+                    location = getTempleLocation(templeId, temple.city);
+                }
+                if (!location) return;
+                
+                const distance = calculateDistance(
+                    dayPreviousCoords.lat, 
+                    dayPreviousCoords.lng, 
+                    location.lat, 
+                    location.lng
+                );
                 const travelTime = estimateTravelTime(distance);
+                
+                // Add travel time
                 currentTime += travelTime;
+                
+                // Ensure we don't go past 10 PM
+                if (currentTime >= 22 * 60) {
+                    currentTime = 22 * 60; // Cap at 10 PM
+                }
+                
                 const arrivalHour = Math.floor(currentTime / 60);
                 const arrivalMin = currentTime % 60;
                 const visitDuration = location.avgVisitDuration;
                 currentTime += visitDuration;
+                
+                // Ensure departure doesn't go past 11 PM
+                if (currentTime >= 23 * 60) {
+                    currentTime = 23 * 60;
+                }
+                
                 const departureHour = Math.floor(currentTime / 60);
                 const departureMin = currentTime % 60;
 
@@ -66,8 +130,9 @@ export default function ItineraryPlanner() {
                     const [rHour] = r.startTime.split(":").map(Number);
                     return rHour >= arrivalHour && rHour <= departureHour;
                 });
+                
                 stops.push({
-                    id: `stop_${day}_${templeId}`,
+                    id: `stop_${day}_${templeId}_${index}`,
                     templeId,
                     templeName: temple.name,
                     day,
@@ -75,16 +140,31 @@ export default function ItineraryPlanner() {
                     departureTime: `${departureHour.toString().padStart(2, "0")}:${departureMin.toString().padStart(2, "0")}`,
                     selectedRitual: suitableRitual,
                     isLocked: false,
-                    travelTimeFromPrevious: stops.length === 0 ? travelTime : travelTime,
+                    travelTimeFromPrevious: index === 0 ? travelTime : travelTime,
                     distance
                 });
+                
                 totalTravelTime += travelTime;
                 totalDistance += distance;
-                previousCoords = {
+                dayPreviousCoords = {
                     lat: location.lat,
                     lng: location.lng
                 };
             });
+            
+            // Update previousCoords for next day
+            if (stops.length > 0) {
+                const lastStop = stops[stops.length - 1];
+                const lastTemple = temples.find(t => t.id === lastStop.templeId);
+                if (lastTemple) {
+                    const lastLocation = templeLocations.find(l => l.templeId === lastStop.templeId) ||
+                                      getTempleLocation(lastStop.templeId, lastTemple.city);
+                    if (lastLocation) {
+                        previousCoords = { lat: lastLocation.lat, lng: lastLocation.lng };
+                    }
+                }
+            }
+            
             if (stops.length > 0) {
                 days.push({
                     day,
@@ -94,6 +174,14 @@ export default function ItineraryPlanner() {
                     totalDistance: Math.round(totalDistance * 10) / 10
                 });
             }
+        }
+        
+        // Verify all temples are included
+        const includedTemples = new Set(days.flatMap(d => d.stops.map(s => s.templeId)));
+        const missingTemples = selectedTemples.filter(id => !includedTemples.has(id));
+        
+        if (missingTemples.length > 0) {
+            toast.warning(`${missingTemples.length} temple(s) could not be included in the itinerary.`);
         }
         const newItinerary: Itinerary = {
             id: `itin_${Date.now()}`,
@@ -130,8 +218,104 @@ export default function ItineraryPlanner() {
         });
     };
     const handleSwap = (stopId: string) => {
-        toast.info("Swap feature coming soon for itinerary optimization");
-        // In the future this can reshuffle stops within the itinerary day
+        if (!itinerary) return;
+        
+        // Find the stop to swap
+        let stopToSwap: ItineraryStop | null = null;
+        let dayIndex = -1;
+        let stopIndex = -1;
+        
+        for (let i = 0; i < itinerary.days.length; i++) {
+            const idx = itinerary.days[i].stops.findIndex(s => s.id === stopId);
+            if (idx !== -1) {
+                stopToSwap = itinerary.days[i].stops[idx];
+                dayIndex = i;
+                stopIndex = idx;
+                break;
+            }
+        }
+        
+        if (!stopToSwap) return;
+        
+        // Find alternative temples in the same city with low-medium crowd
+        const temple = temples.find(t => t.id === stopToSwap.templeId);
+        if (!temple) return;
+        
+        // Get recommendations from same city
+        const alternatives = temples.filter(t => 
+            t.city.toLowerCase() === temple.city.toLowerCase() && 
+            t.id !== stopToSwap.templeId &&
+            availableTemples.some(at => at.id === t.id)
+        );
+        
+        if (alternatives.length === 0) {
+            toast.info("No alternative temples found in the same city");
+            return;
+        }
+        
+        // For now, swap with first alternative (can be enhanced with crowd-based selection)
+        const alternativeTemple = alternatives[0];
+        const altLocation = templeLocations.find(l => l.templeId === alternativeTemple.id) || 
+                          getTempleLocation(alternativeTemple.id, alternativeTemple.city);
+        
+        if (!altLocation) return;
+        
+        // Update the stop
+        const updatedDays = itinerary.days.map((day, dIdx) => {
+            if (dIdx !== dayIndex) return day;
+            
+            return {
+                ...day,
+                stops: day.stops.map((stop, sIdx) => {
+                    if (sIdx !== stopIndex) return stop;
+                    
+                    // Recalculate times based on previous stop
+                    const prevStop = sIdx > 0 ? day.stops[sIdx - 1] : null;
+                    const prevCoords = prevStop 
+                        ? (templeLocations.find(l => l.templeId === prevStop.templeId) || 
+                           getTempleLocation(prevStop.templeId, temples.find(t => t.id === prevStop.templeId)?.city || ""))
+                        : (startCity ? { lat: startCity.lat, lng: startCity.lng } : { lat: 28.6139, lng: 77.209 });
+                    
+                    if (!prevCoords) return stop;
+                    
+                    const distance = calculateDistance(prevCoords.lat, prevCoords.lng, altLocation.lat, altLocation.lng);
+                    const travelTime = estimateTravelTime(distance);
+                    const arrivalTime = prevStop 
+                        ? prevStop.departureTime 
+                        : "06:00";
+                    const [arrHour, arrMin] = arrivalTime.split(":").map(Number);
+                    let currentTime = arrHour * 60 + arrMin + travelTime;
+                    const newArrHour = Math.floor(currentTime / 60);
+                    const newArrMin = currentTime % 60;
+                    currentTime += altLocation.avgVisitDuration;
+                    const newDepHour = Math.floor(currentTime / 60);
+                    const newDepMin = currentTime % 60;
+                    
+                    const suitableRitual = altLocation.ritualTimings.find(r => {
+                        const [rHour] = r.startTime.split(":").map(Number);
+                        return rHour >= newArrHour && rHour <= newDepHour;
+                    });
+                    
+                    return {
+                        ...stop,
+                        templeId: alternativeTemple.id,
+                        templeName: alternativeTemple.name,
+                        arrivalTime: `${newArrHour.toString().padStart(2, "0")}:${newArrMin.toString().padStart(2, "0")}`,
+                        departureTime: `${newDepHour.toString().padStart(2, "0")}:${newDepMin.toString().padStart(2, "0")}`,
+                        selectedRitual: suitableRitual,
+                        travelTimeFromPrevious: travelTime,
+                        distance,
+                    };
+                }),
+            };
+        });
+        
+        setItinerary({
+            ...itinerary,
+            days: updatedDays,
+        });
+        
+        toast.success(`Swapped to ${alternativeTemple.name}`);
     };
     const handleSelectRitual = (stopId: string, ritual: RitualTiming) => {
         if (!itinerary) return;
@@ -324,20 +508,73 @@ export default function ItineraryPlanner() {
 
                 {/* Temple Selection */}
                 <div className="card-elevated p-6">
-                    <h2 className="font-display text-xl font-semibold mb-4">Select Temples</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {temples.map(temple => <button key={temple.id} onClick={() => toggleTempleSelection(temple.id)} className={`p-4 rounded-xl text-left transition-all border ${selectedTemples.includes(temple.id) ? "bg-primary/10 border-primary ring-2 ring-primary/20" : "bg-card border-border hover:bg-muted"}`}>
-                            <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedTemples.includes(temple.id) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                                    {selectedTemples.includes(temple.id) ? <span className="font-bold">{selectedTemples.indexOf(temple.id) + 1}</span> : <Plus className="h-5 w-5" />}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-medium truncate">{temple.name}</p>
-                                    <p className="text-sm text-muted-foreground">{temple.city}</p>
-                                </div>
-                            </div>
-                        </button>)}
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="font-display text-xl font-semibold">Select Pilgrimage Sites</h2>
+                        {startLocation && (
+                            <span className="text-sm text-muted-foreground">
+                                Showing sites in <span className="font-medium text-foreground">{startLocation}</span>
+                            </span>
+                        )}
                     </div>
+                    
+                    {loadingTemples ? (
+                        <div className="text-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                            <p className="text-sm text-muted-foreground">Loading pilgrimage sites...</p>
+                        </div>
+                    ) : availableTemples.length === 0 ? (
+                        <div className="text-center py-8">
+                            <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-muted-foreground mb-2">
+                                {startLocation 
+                                    ? `No pilgrimage sites found in ${startLocation}`
+                                    : "Please select a start location first"}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                                Try selecting a different city or check back later.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {availableTemples.map(temple => (
+                                <button 
+                                    key={temple.id} 
+                                    onClick={() => toggleTempleSelection(temple.id)} 
+                                    className={`p-4 rounded-xl text-left transition-all border ${
+                                        selectedTemples.includes(temple.id) 
+                                            ? "bg-primary/10 border-primary ring-2 ring-primary/20" 
+                                            : "bg-card border-border hover:bg-muted"
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                            selectedTemples.includes(temple.id) 
+                                                ? "bg-primary text-primary-foreground" 
+                                                : "bg-muted text-muted-foreground"
+                                        }`}>
+                                            {selectedTemples.includes(temple.id) ? (
+                                                <span className="font-bold">{selectedTemples.indexOf(temple.id) + 1}</span>
+                                            ) : (
+                                                <Plus className="h-5 w-5" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium truncate">{temple.name}</p>
+                                            <p className="text-sm text-muted-foreground">{temple.category}</p>
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    
+                    {selectedTemples.length > 0 && (
+                        <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                            <p className="text-sm font-medium text-foreground">
+                                {selectedTemples.length} site{selectedTemples.length !== 1 ? "s" : ""} selected
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Generated Itinerary */}

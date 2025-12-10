@@ -3,7 +3,7 @@ import { TrendingUp, Users, Clock, AlertTriangle, Bell, BellOff } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { HistoricalChart } from "@/components/HistoricalChart";
 import type { Temple, Device, CrowdData } from "@/data/mockData";
-import { getCrowdLevel, CROWD_THRESHOLDS } from "@/data/mockData";
+import { getCrowdLevel } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
@@ -18,7 +18,7 @@ const crowdBadgeClasses = {
     Low: "badge-crowd-low",
     Medium: "badge-crowd-medium",
     High: "badge-crowd-high",
-    Extreme: "badge-crowd-extreme",
+    Critical: "badge-crowd-extreme", // Using same class for Critical
 };
 
 export function CrowdMonitor({ temple, device, initialCrowd }: CrowdMonitorProps) {
@@ -49,7 +49,7 @@ export function CrowdMonitor({ temple, device, initialCrowd }: CrowdMonitorProps
 
         const delta = Math.floor(Math.random() * 21) - 8; // -8 to +12
         const newCount = Math.max(0, crowd.currentCount + delta);
-        const newLevel = getCrowdLevel(newCount);
+        const newLevel = getCrowdLevel(newCount, temple.totalCapacity);
 
         // Check for alerts
         const newAlerts: string[] = [];
@@ -67,20 +67,20 @@ export function CrowdMonitor({ temple, device, initialCrowd }: CrowdMonitorProps
             }
         }
 
-        if (newLevel === "Extreme" && crowd.crowdLevel !== "Extreme") {
-            const alertMsg = "Crowd level has reached EXTREME! Consider visiting later.";
+        if (newLevel === "Critical" && crowd.crowdLevel !== "Critical") {
+            const alertMsg = "Crowd level has reached CRITICAL! Consider visiting later.";
             newAlerts.push(alertMsg);
 
             // Send push notification
             if (permission === "granted") {
-                sendNotification(`🔴 ${temple.name} - Extreme Crowd`, {
-                    body: "Crowd level is now EXTREME. We recommend visiting at a different time.",
-                    tag: `extreme-${temple.id}`,
+                sendNotification(`🔴 ${temple.name} - Critical Crowd`, {
+                    body: "Crowd level is now CRITICAL. We recommend visiting at a different time.",
+                    tag: `critical-${temple.id}`,
                 });
             }
         }
 
-        if (newLevel === "High" && crowd.crowdLevel !== "High" && crowd.crowdLevel !== "Extreme") {
+        if (newLevel === "High" && crowd.crowdLevel !== "High" && crowd.crowdLevel !== "Critical") {
             const alertMsg = "Crowd level is now HIGH.";
             newAlerts.push(alertMsg);
 
@@ -136,7 +136,7 @@ export function CrowdMonitor({ temple, device, initialCrowd }: CrowdMonitorProps
         }
     }, [device, permission, sendNotification, temple.name]);
 
-    const crowdLevel = crowd ? getCrowdLevel(crowd.currentCount) : "Low";
+    const crowdLevel = crowd ? getCrowdLevel(crowd.currentCount, temple.totalCapacity) : "Low";
     const capacityPercentage = crowd ? Math.round((crowd.currentCount / temple.totalCapacity) * 100) : 0;
 
     return (

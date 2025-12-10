@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 interface MiniSparklineProps {
     data: number[];
-    crowdLevel: "Low" | "Medium" | "High" | "Extreme";
+    crowdLevel: "Low" | "Medium" | "High" | "Critical";
     className?: string;
 }
 
@@ -10,7 +10,7 @@ const crowdColors = {
     Low: "#22c55e",
     Medium: "#eab308",
     High: "#FF6B35",
-    Extreme: "#ef4444",
+    Critical: "#ef4444",
 };
 
 export function MiniSparkline({ data, crowdLevel, className }: MiniSparklineProps) {

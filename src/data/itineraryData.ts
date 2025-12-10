@@ -55,7 +55,7 @@ export interface AlternativeRecommendation {
     city: string;
     distance: number; // km from selected site
     travelTime: number; // minutes
-    crowdLevel: "Low" | "Medium" | "High" | "Extreme";
+    crowdLevel: "Low" | "Medium" | "High" | "Critical";
     currentCount: number;
     expectedWaitTime: number; // minutes
     ritualMatch: boolean;
@@ -237,6 +237,56 @@ export const templeLocations: TempleLocation[] = [
     },
 ];
 
+// Helper function to generate temple location if not found
+export const getTempleLocation = (templeId: string, cityName: string): TempleLocation | null => {
+    // Check if location already exists
+    const existing = templeLocations.find(l => l.templeId === templeId);
+    if (existing) return existing;
+    
+    // Find city coordinates from majorCities
+    const city = majorCities.find(c => c.name.toLowerCase() === cityName.toLowerCase());
+    if (!city) return null;
+    
+    // Generate a location near the city center with slight variation
+    const lat = city.lat + (Math.random() - 0.5) * 0.1; // ±0.05 degrees (~5km)
+    const lng = city.lng + (Math.random() - 0.5) * 0.1;
+    
+    // Default ritual timings
+    const defaultRituals: RitualTiming[] = [
+        {
+            name: "Morning Aarti",
+            startTime: "06:00",
+            endTime: "07:00",
+            description: "Morning prayer ceremony",
+            priority: "must-see",
+        },
+        {
+            name: "Afternoon Aarti",
+            startTime: "12:00",
+            endTime: "12:30",
+            description: "Midday prayers",
+            priority: "recommended",
+        },
+        {
+            name: "Evening Aarti",
+            startTime: "18:00",
+            endTime: "19:00",
+            description: "Evening prayer ceremony",
+            priority: "must-see",
+        },
+    ];
+    
+    return {
+        templeId,
+        lat,
+        lng,
+        ritualTimings: defaultRituals,
+        avgVisitDuration: 60,
+        bestVisitTime: "Morning (6-8 AM)",
+        expectedWaitTime: 20,
+    };
+};
+
 // Calculate distance between two coordinates (Haversine formula)
 export const calculateDistance = (
     lat1: number,
@@ -271,14 +321,14 @@ export const getExpectedWaitTime = (crowdLevel: string): number => {
             return 25;
         case "High":
             return 45;
-        case "Extreme":
+        case "Critical":
             return 90;
         default:
             return 20;
     }
 };
 
-// Major cities in India for start location
+// Major cities in India for start location (including cities with pilgrimage sites)
 export const majorCities = [
     { name: "Delhi", lat: 28.6139, lng: 77.2090 },
     { name: "Mumbai", lat: 19.0760, lng: 72.8777 },
@@ -290,4 +340,31 @@ export const majorCities = [
     { name: "Kolkata", lat: 22.5726, lng: 88.3639 },
     { name: "Chennai", lat: 13.0827, lng: 80.2707 },
     { name: "Hyderabad", lat: 17.3850, lng: 78.4867 },
+    // Cities with pilgrimage sites
+    { name: "Ayodhya", lat: 26.7922, lng: 82.1998 },
+    { name: "Mathura", lat: 27.4924, lng: 77.6737 },
+    { name: "Vrindavan", lat: 27.5706, lng: 77.7000 },
+    { name: "Tirupati", lat: 13.6288, lng: 79.4192 },
+    { name: "Srikalahasti", lat: 13.7500, lng: 79.7000 },
+    { name: "Vijayawada", lat: 16.5062, lng: 80.6480 },
+    { name: "Madurai", lat: 9.9252, lng: 78.1198 },
+    { name: "Rameswaram", lat: 9.2881, lng: 79.3129 },
+    { name: "Thanjavur", lat: 10.7867, lng: 79.1378 },
+    { name: "Palani", lat: 10.4500, lng: 77.5200 },
+    { name: "Puri", lat: 19.8135, lng: 85.8315 },
+    { name: "Konark", lat: 19.8876, lng: 86.0945 },
+    { name: "Bhubaneswar", lat: 20.2961, lng: 85.8245 },
+    { name: "Kedarnath", lat: 30.7353, lng: 79.0669 },
+    { name: "Badrinath", lat: 30.7448, lng: 79.4932 },
+    { name: "Gangotri", lat: 30.9944, lng: 78.9403 },
+    { name: "Yamunotri", lat: 31.0150, lng: 78.4600 },
+    { name: "Haridwar", lat: 29.9457, lng: 78.1642 },
+    { name: "Katra", lat: 32.9915, lng: 74.9318 },
+    { name: "Pahalgam", lat: 34.0151, lng: 75.3188 },
+    { name: "Srinagar", lat: 34.0837, lng: 74.7973 },
+    { name: "Amritsar", lat: 31.6340, lng: 74.8723 },
+    { name: "Anandpur Sahib", lat: 31.2350, lng: 76.5000 },
+    { name: "Dwarka", lat: 22.2403, lng: 68.9686 },
+    { name: "Veraval", lat: 20.8880, lng: 70.4012 },
+    { name: "Shirdi", lat: 19.7610, lng: 74.4770 },
 ];

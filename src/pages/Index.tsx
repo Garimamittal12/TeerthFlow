@@ -81,7 +81,7 @@ const Index = () => {
                                     <span>{states.length} States</span>
                                 </div>
                                 <span className="text-gold">•</span>
-                                <span>5 Pilgrimage Sites</span>
+                                <span>{states.reduce((sum, s) => sum + s.templeCount, 0)} Pilgrimage Sites</span>
                                 <span className="text-gold">•</span>
                                 <span>Live Crowd Data</span>
                             </div>

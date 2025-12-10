@@ -19,7 +19,7 @@ const crowdBadgeClasses = {
     Low: "badge-crowd-low",
     Medium: "badge-crowd-medium",
     High: "badge-crowd-high",
-    Extreme: "badge-crowd-extreme",
+    Critical: "badge-crowd-extreme", // Using same class for Critical
 };
 
 export function ItineraryStopCard({
@@ -33,7 +33,7 @@ export function ItineraryStopCard({
     const temple = temples.find((t) => t.id === stop.templeId);
     const location = templeLocations.find((l) => l.templeId === stop.templeId);
     const crowd = crowdData.find((c) => c.templeId === stop.templeId);
-    const crowdLevel = crowd ? getCrowdLevel(crowd.currentCount) : "Low";
+    const crowdLevel = crowd && temple ? getCrowdLevel(crowd.currentCount, temple.totalCapacity) : "Low";
 
     if (!temple || !location) return null;
 

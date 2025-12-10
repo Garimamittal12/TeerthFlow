@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import StatePage from "./pages/StatePage";
+import CityPage from "./pages/CityPage";
 import TemplePage from "./pages/TemplePage";
 import ItineraryPlanner from "./pages/ItineraryPlanner";
 import About from "./pages/About";
@@ -27,6 +28,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/state/:stateId" element={<StatePage />} />
+              <Route path="/state/:stateId/city/:cityName" element={<CityPage />} />
               <Route path="/temple/:templeId" element={<TemplePage />} />
               <Route path="/itinerary" element={<ItineraryPlanner />} />
               <Route path="/about" element={<About />} />

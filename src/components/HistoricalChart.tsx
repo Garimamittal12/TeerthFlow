@@ -9,7 +9,7 @@ import {
     ResponsiveContainer,
     ReferenceLine,
 } from "recharts";
-import { CROWD_THRESHOLDS } from "@/data/mockData";
+import { getCrowdLevel } from "@/data/mockData";
 
 interface HistoricalChartProps {
     data: { time: string; count: number }[];
@@ -35,10 +35,7 @@ export function HistoricalChart({ data, capacity, isRealtime = false }: Historic
     const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) => {
         if (active && payload && payload.length) {
             const count = payload[0].value;
-            let level = "Low";
-            if (count >= CROWD_THRESHOLDS.extreme) level = "Extreme";
-            else if (count >= CROWD_THRESHOLDS.high) level = "High";
-            else if (count >= CROWD_THRESHOLDS.medium) level = "Medium";
+            const level = getCrowdLevel(count, capacity);
 
             return (
                 <div className="bg-card border border-border rounded-xl p-3 shadow-lg">
@@ -90,24 +87,30 @@ export function HistoricalChart({ data, capacity, isRealtime = false }: Historic
 
                     <Tooltip content={<CustomTooltip />} />
 
-                    {/* Threshold lines */}
+                    {/* Threshold lines based on percentage */}
                     <ReferenceLine
-                        y={CROWD_THRESHOLDS.medium}
-                        stroke="hsl(var(--warning))"
+                        y={capacity * 0.5}
+                        stroke="hsl(var(--success))"
                         strokeDasharray="5 5"
-                        label={{ value: "Medium", fontSize: 10, fill: "hsl(var(--warning))" }}
+                        label={{ value: "50% (Low)", fontSize: 10, fill: "hsl(var(--success))" }}
                     />
                     <ReferenceLine
-                        y={CROWD_THRESHOLDS.high}
+                        y={capacity * 0.8}
+                        stroke="hsl(var(--warning))"
+                        strokeDasharray="5 5"
+                        label={{ value: "80% (Medium)", fontSize: 10, fill: "hsl(var(--warning))" }}
+                    />
+                    <ReferenceLine
+                        y={capacity * 0.9}
                         stroke="hsl(var(--saffron))"
                         strokeDasharray="5 5"
-                        label={{ value: "High", fontSize: 10, fill: "hsl(var(--saffron))" }}
+                        label={{ value: "90% (High)", fontSize: 10, fill: "hsl(var(--saffron))" }}
                     />
                     <ReferenceLine
                         y={capacity}
                         stroke="hsl(var(--destructive))"
                         strokeDasharray="5 5"
-                        label={{ value: "Capacity", fontSize: 10, fill: "hsl(var(--destructive))" }}
+                        label={{ value: "100% (Critical)", fontSize: 10, fill: "hsl(var(--destructive))" }}
                     />
 
                     <Area

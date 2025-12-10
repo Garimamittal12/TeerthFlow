@@ -10,6 +10,7 @@ import {
     calculateDistance,
     estimateTravelTime,
     getExpectedWaitTime,
+    getTempleLocation,
 } from "@/data/itineraryData";
 import type { AlternativeRecommendation, RitualTiming } from "@/data/itineraryData";
 import { toast } from "sonner";
@@ -23,7 +24,7 @@ const crowdBadgeClasses = {
     Low: "badge-crowd-low",
     Medium: "badge-crowd-medium",
     High: "badge-crowd-high",
-    Extreme: "badge-crowd-extreme",
+    Critical: "badge-crowd-extreme", // Using same class for Critical
 };
 
 export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }: RecommendationPanelProps) {
@@ -41,12 +42,17 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
     }, [selectedTempleId]);
 
     const selectedLocation = useMemo(() => {
-        if (!selectedTempleId) return null;
-        return templeLocations.find((l) => l.templeId === selectedTempleId);
-    }, [selectedTempleId]);
+        if (!selectedTempleId || !selectedTemple) return null;
+        let location = templeLocations.find((l) => l.templeId === selectedTempleId);
+        if (!location) {
+            location = getTempleLocation(selectedTempleId, selectedTemple.city);
+        }
+        return location;
+    }, [selectedTempleId, selectedTemple]);
 
-    const crowdLevel = selectedCrowd ? getCrowdLevel(selectedCrowd.currentCount) : "Low";
-    const showRecommendations = crowdLevel === "High" || crowdLevel === "Extreme";
+    const crowdLevel = selectedCrowd && selectedTemple ? getCrowdLevel(selectedCrowd.currentCount, selectedTemple.totalCapacity) : "Low";
+    // Always show recommendations for same city and nearby places with low-medium crowd
+    const showRecommendations = true;
 
     // Check if a ritual is within a time window of current time
     const isRitualNearTime = (ritualTime: string, currentTimeStr: string): boolean => {
@@ -68,7 +74,11 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
             temples.forEach((temple) => {
                 if (temple.id === selectedTempleId) return;
 
-                const location = templeLocations.find((l) => l.templeId === temple.id);
+                // Get location, generate if missing
+                let location = templeLocations.find((l) => l.templeId === temple.id);
+                if (!location) {
+                    location = getTempleLocation(temple.id, temple.city);
+                }
                 const crowd = crowdData.find((c) => c.templeId === temple.id);
 
                 if (!location || !crowd) return;
@@ -80,8 +90,22 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
                     location.lng
                 );
                 const travelTime = estimateTravelTime(distance);
-                const templeCrowdLevel = getCrowdLevel(crowd.currentCount);
+                const templeCrowdLevel = getCrowdLevel(crowd.currentCount, temple.totalCapacity);
                 const expectedWaitTime = getExpectedWaitTime(templeCrowdLevel);
+
+                // Only include low to medium crowd levels
+                if (templeCrowdLevel !== "Low" && templeCrowdLevel !== "Medium") {
+                    return;
+                }
+
+                // Check if same city or nearby (within 50km)
+                const isSameCity = temple.city.toLowerCase() === selectedTemple.city.toLowerCase();
+                const isNearby = distance <= 50; // Within 50km
+
+                // Only include same city or nearby places
+                if (!isSameCity && !isNearby) {
+                    return;
+                }
 
                 // Find matching rituals near current time
                 const matchingRituals = location.ritualTimings.filter((ritual) =>
@@ -91,7 +115,12 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
                 // Calculate score (lower is better)
                 let score = 0;
                 score += distance * 2; // Proximity weight
-                score += crowdLevel === "Low" ? -20 : crowdLevel === "Medium" ? -10 : crowdLevel === "High" ? 10 : 20;
+                // Prioritize same city
+                if (isSameCity) {
+                    score -= 50; // Big bonus for same city
+                }
+                // Prioritize low crowd over medium
+                score += templeCrowdLevel === "Low" ? -30 : -10;
                 score -= matchingRituals.length * 15; // Ritual match bonus
                 score += expectedWaitTime * 0.5;
 
@@ -111,9 +140,8 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
                 });
             });
 
-            // Sort by score (lower is better) and filter to low/medium crowd
+            // Sort by score (lower is better) - already filtered to low/medium crowd
             const filtered = alternatives
-                .filter((a) => a.crowdLevel === "Low" || a.crowdLevel === "Medium")
                 .sort((a, b) => a.score - b.score)
                 .slice(0, 5);
 
@@ -123,10 +151,11 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
     };
 
     useEffect(() => {
-        if (showRecommendations) {
+        if (selectedTempleId && selectedTemple && selectedLocation) {
             generateRecommendations();
         }
-    }, [selectedTempleId, showRecommendations]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedTempleId, currentTime]);
 
     const handleReschedule = (templeId: string) => {
         const temple = temples.find((t) => t.id === templeId);
@@ -167,14 +196,14 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
             {/* Cause Section */}
             <div className={cn(
                 "p-4 rounded-xl mb-4",
-                crowdLevel === "Extreme" ? "bg-destructive/10 border border-destructive/20" :
+                crowdLevel === "Critical" ? "bg-destructive/10 border border-destructive/20" :
                     crowdLevel === "High" ? "bg-primary/10 border border-primary/20" :
                         "bg-muted"
             )}>
                 <div className="flex items-start gap-3">
                     <AlertTriangle className={cn(
                         "h-5 w-5 mt-0.5",
-                        crowdLevel === "Extreme" ? "text-destructive" :
+                        crowdLevel === "Critical" ? "text-destructive" :
                             crowdLevel === "High" ? "text-primary" :
                                 "text-muted-foreground"
                     )} />
@@ -203,7 +232,9 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
 
                         {showRecommendations && (
                             <p className="text-sm text-muted-foreground mt-3">
-                                Current crowd level is {crowdLevel.toLowerCase()}. Consider these alternatives for a better experience.
+                                {crowdLevel === "High" || crowdLevel === "Critical" 
+                                    ? `Current crowd level is ${crowdLevel.toLowerCase()}. Consider these alternatives for a better experience.`
+                                    : "Here are nearby places in the same city with low to medium crowd levels."}
                             </p>
                         )}
                     </div>
@@ -211,12 +242,16 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
             </div>
 
             {/* Recommendations */}
-            {showRecommendations ? (
+            {showRecommendations && (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <TrendingDown className="h-5 w-5 text-success" />
-                            <h3 className="font-display font-semibold">Recommended Alternatives</h3>
+                            <h3 className="font-display font-semibold">
+                                {crowdLevel === "High" || crowdLevel === "Critical" 
+                                    ? "Recommended Alternatives"
+                                    : "Nearby Places to Visit"}
+                            </h3>
                         </div>
                         <Button
                             variant="ghost"
@@ -241,6 +276,7 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
                                 <div key={rec.templeId} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                                     <AlternativeCard
                                         recommendation={rec}
+                                        selectedCity={selectedTemple.city}
                                         onReschedule={handleReschedule}
                                         onSwap={handleSwap}
                                         onAddEvening={handleAddEvening}
@@ -251,19 +287,9 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
                         </div>
                     ) : (
                         <div className="text-center p-6 text-muted-foreground">
-                            <p>No low-crowd alternatives found nearby.</p>
+                            <p>No nearby places with low to medium crowd found in {selectedTemple.city}.</p>
                         </div>
                     )}
-                </div>
-            ) : (
-                <div className="text-center p-6">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-success/10 mb-4">
-                        <Users className="h-6 w-6 text-success" />
-                    </div>
-                    <h3 className="font-display font-semibold mb-2">Crowd Level is Good!</h3>
-                    <p className="text-sm text-muted-foreground">
-                        Current crowd at {selectedTemple.name} is manageable. No alternatives needed.
-                    </p>
                 </div>
             )}
         </div>

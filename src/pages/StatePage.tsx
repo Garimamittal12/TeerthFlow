@@ -1,119 +1,44 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { Search, Filter, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Breadcrumb } from "@/components/Breadcrumbs";
-import { TempleCard } from "@/components/TempleCard";
-import { TempleCardSkeleton } from "@/components/Skeleton";
+import { CityCard } from "@/components/CityCard";
+import { StateCardSkeleton } from "@/components/Skeleton";
 import { Button } from "@/components/ui/button";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import {
     getStateById,
-    getTemplesByState,
-    devices as initialDevices,
-    crowdData as initialCrowdData,
-    getCrowdLevel,
+    getCitiesByState,
     type State,
-    type Temple,
-    type Device,
-    type CrowdData,
+    type City,
 } from "@/data/mockData";
-import { cn } from "@/lib/utils";
-
-const categories = ["All", "Shiva", "Vishnu", "Ganesha", "Lakshmi-Narayan"];
-const crowdLevels = ["All", "Low", "Medium", "High", "Extreme"];
 
 export default function StatePage() {
     const { stateId } = useParams<{ stateId: string }>();
     const [state, setState] = useState<State | null>(null);
-    const [temples, setTemples] = useState<Temple[]>([]);
+    const [cities, setCities] = useState<City[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
-    const [category, setCategory] = useState("All");
-    const [crowdLevelFilter, setCrowdLevelFilter] = useState("All");
-    const [devices, setDevices] = useState<Device[]>(initialDevices);
-    const [crowdData, setCrowdData] = useState<CrowdData[]>(initialCrowdData);
 
     useEffect(() => {
         if (!stateId) return;
 
         setLoading(true);
-        Promise.all([getStateById(stateId), getTemplesByState(stateId)]).then(
-            ([stateData, templeData]) => {
+        Promise.all([getStateById(stateId), getCitiesByState(stateId)]).then(
+            ([stateData, cityData]) => {
                 setState(stateData || null);
-                setTemples(templeData);
+                setCities(cityData);
                 setLoading(false);
             }
         );
     }, [stateId]);
 
-    // Real-time crowd simulation
-    const updateCrowdData = useCallback(() => {
-        setCrowdData(prevCrowdData =>
-            prevCrowdData.map(crowd => {
-                const delta = Math.floor(Math.random() * 21) - 8; // -8 to +12
-                const newCount = Math.max(0, crowd.currentCount + delta);
-                const newLevel = getCrowdLevel(newCount);
-
-                return {
-                    ...crowd,
-                    currentCount: newCount,
-                    crowdLevel: newLevel,
-                    lastUpdated: new Date().toISOString(),
-                    history: [
-                        ...crowd.history.slice(-23),
-                        { time: new Date().toISOString(), count: newCount }
-                    ],
-                };
-            })
+    const filteredCities = useMemo(() => {
+        if (!search) return cities;
+        return cities.filter((city) =>
+            city.name.toLowerCase().includes(search.toLowerCase())
         );
-    }, []);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            updateCrowdData();
-        }, Math.random() * 4000 + 3000); // 3-7 seconds
-
-        return () => clearInterval(interval);
-    }, [updateCrowdData]);
-
-    const filteredTemples = useMemo(() => {
-        return temples.filter((temple) => {
-            // Search filter
-            if (
-                search &&
-                !temple.name.toLowerCase().includes(search.toLowerCase()) &&
-                !temple.city.toLowerCase().includes(search.toLowerCase())
-            ) {
-                return false;
-            }
-
-            // Category filter
-            if (category !== "All" && temple.category !== category) {
-                return false;
-            }
-
-            // Crowd level filter - compare case-insensitively
-            if (crowdLevelFilter !== "All") {
-                const templeCrowd = crowdData.find((c) => c.templeId === temple.id);
-                if (!templeCrowd) return false;
-
-                // Recalculate crowd level based on current count for real-time accuracy
-                const currentLevel = getCrowdLevel(templeCrowd.currentCount);
-                if (currentLevel.toLowerCase() !== crowdLevelFilter.toLowerCase()) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
-    }, [temples, search, category, crowdLevelFilter, crowdData]);
+    }, [cities, search]);
 
     if (!loading && !state) {
         return (
@@ -155,10 +80,10 @@ export default function StatePage() {
                                         items={[{ label: state.name }]}
                                     />
                                     <h1 className="font-display text-3xl md:text-4xl font-bold text-primary-foreground">
-                                        Temples in {state.name}
+                                        Cities in {state.name}
                                     </h1>
                                     <p className="text-primary-foreground/80 mt-2">
-                                        {state.templeCount} sacred destinations to explore
+                                        {cities.length} cit{cities.length !== 1 ? "ies" : "y"} with pilgrimage sites
                                     </p>
                                 </div>
                             </div>
@@ -166,94 +91,65 @@ export default function StatePage() {
                     )}
                 </section>
 
-                {/* Filters */}
+                {/* Search */}
                 <section className="sticky top-16 z-40 bg-card/95 backdrop-blur-lg border-b border-border py-4">
                     <div className="container">
-                        <div className="flex flex-col md:flex-row gap-4">
-                            {/* Search */}
-                            <div className="relative flex-1">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <input
-                                    type="text"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Search temples by name or city..."
-                                    className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                                    aria-label="Search temples"
-                                />
-                            </div>
-
-                            {/* Category Filter */}
-                            <Select value={category} onValueChange={setCategory}>
-                                <SelectTrigger className="w-full md:w-44 rounded-xl">
-                                    <Filter className="h-4 w-4 mr-2" />
-                                    <SelectValue placeholder="Category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {categories.map((cat) => (
-                                        <SelectItem key={cat} value={cat}>
-                                            {cat}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                            {/* Crowd Level Filter */}
-                            <Select value={crowdLevelFilter} onValueChange={setCrowdLevelFilter}>
-                                <SelectTrigger className="w-full md:w-44 rounded-xl">
-                                    <SlidersHorizontal className="h-4 w-4 mr-2" />
-                                    <SelectValue placeholder="Crowd Level" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {crowdLevels.map((level) => (
-                                        <SelectItem key={level} value={level}>
-                                            {level === "All" ? "All Levels" : level}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        <div className="relative flex-1 max-w-2xl mx-auto">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search cities..."
+                                className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                aria-label="Search cities"
+                            />
                         </div>
                     </div>
                 </section>
 
-                {/* Temple Grid */}
+                {/* Cities Grid */}
                 <section className="py-8">
                     <div className="container">
                         {/* Results count */}
                         <p className="text-sm text-muted-foreground mb-6">
-                            {filteredTemples.length} temple{filteredTemples.length !== 1 && "s"} found
+                            {filteredCities.length} cit{filteredCities.length !== 1 ? "ies" : "y"} found
                         </p>
 
                         {loading ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <TempleCardSkeleton />
-                                <TempleCardSkeleton />
-                                <TempleCardSkeleton />
+                                <StateCardSkeleton />
+                                <StateCardSkeleton />
+                                <StateCardSkeleton />
                             </div>
-                        ) : filteredTemples.length === 0 ? (
+                        ) : filteredCities.length === 0 ? (
                             <div className="text-center py-16">
-                                <p className="text-lg text-muted-foreground mb-4">
-                                    No temples match your filters
+                                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center">
+                                    <Search className="h-12 w-12 text-muted-foreground/50" />
+                                </div>
+                                <h3 className="font-display text-xl font-semibold text-foreground mb-2">
+                                    {search ? "No cities found" : "No cities available"}
+                                </h3>
+                                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                                    {search 
+                                        ? `We couldn't find any cities matching "${search}" in ${state?.name}. Try a different search term.`
+                                        : `There are currently no cities with pilgrimage sites listed for ${state?.name}.`}
                                 </p>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                        setSearch("");
-                                        setCategory("All");
-                                        setCrowdLevelFilter("All");
-                                    }}
-                                >
-                                    Clear Filters
-                                </Button>
+                                {search && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setSearch("")}
+                                    >
+                                        Clear Search
+                                    </Button>
+                                )}
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredTemples.map((temple, index) => (
-                                    <TempleCard
-                                        key={temple.id}
-                                        temple={temple}
-                                        device={devices.find((d) => d.id === temple.deviceId)}
-                                        crowd={crowdData.find((c) => c.templeId === temple.id)}
+                                {filteredCities.map((city, index) => (
+                                    <CityCard
+                                        key={city.name}
+                                        city={city}
                                         index={index}
                                     />
                                 ))}

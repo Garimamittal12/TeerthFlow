@@ -82,7 +82,7 @@ export default function Contact() {
                                         </div>
                                         <div>
                                             <p className="font-medium text-foreground">Phone</p>
-                                            <p className="text-muted-foreground">+91 1800-TEERTH</p>
+                                            <p className="text-muted-foreground">+91 xxxxxxxxxx</p>
                                         </div>
                                     </div>
 
@@ -93,8 +93,8 @@ export default function Contact() {
                                         <div>
                                             <p className="font-medium text-foreground">Office</p>
                                             <p className="text-muted-foreground">
-                                                Varanasi, Uttar Pradesh<br />
-                                                India - 221001
+                                                Mathura, Uttar Pradesh<br />
+                                                India - 281406
                                             </p>
                                         </div>
                                     </div>

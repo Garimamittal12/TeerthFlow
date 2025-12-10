@@ -16,11 +16,11 @@ const crowdBadgeClasses = {
     Low: "badge-crowd-low",
     Medium: "badge-crowd-medium",
     High: "badge-crowd-high",
-    Extreme: "badge-crowd-extreme",
+    Critical: "badge-crowd-extreme", // Using same class for Critical
 };
 
 export function TempleCard({ temple, device, crowd, index = 0 }: TempleCardProps) {
-    const crowdLevel = crowd ? getCrowdLevel(crowd.currentCount) : "Low";
+    const crowdLevel = crowd ? getCrowdLevel(crowd.currentCount, temple.totalCapacity) : "Low";
     const capacityPercentage = crowd ? Math.round((crowd.currentCount / temple.totalCapacity) * 100) : 0;
 
     return (
