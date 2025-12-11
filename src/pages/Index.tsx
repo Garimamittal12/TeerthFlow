@@ -27,16 +27,23 @@ const Index = () => {
     const featuredStates = states.filter((s) => s.featured);
     const filteredAllStates = useMemo(
         () =>
-            !allStatesSearch
-                ? states
-                : states.filter((s) =>
+            allStatesSearch
+                ? states.filter((s) =>
                     s.name.toLowerCase().includes(allStatesSearch.toLowerCase())
-                ),
+                )
+                : states,
         [states, allStatesSearch]
     );
+
+    // Homepage should show 3 cards, skipping Gujarat; View All should include Gujarat
+    const homepageStates = useMemo(
+        () => filteredAllStates.filter((state) => state.id !== "gujarat").slice(0, 3),
+        [filteredAllStates]
+    );
+
     const visibleAllStates = useMemo(
-        () => (showAllStates ? filteredAllStates : filteredAllStates.slice(0, 4)),
-        [filteredAllStates, showAllStates]
+        () => (showAllStates ? filteredAllStates : homepageStates),
+        [filteredAllStates, homepageStates, showAllStates]
     );
 
     return (
@@ -142,7 +149,7 @@ const Index = () => {
                             <div className="container">
                                 <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                                     <div>
-                /                       <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-2">
+                                        <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-2">
                                             All States
                                         </h2>
                                         <p className="text-muted-foreground">
@@ -174,7 +181,7 @@ const Index = () => {
                                         </div>
 
                                         {/* View all / collapse toggle */}
-                                        {filteredAllStates.length > 4 && !allStatesSearch && (
+                                        {filteredAllStates.length > 3 && !allStatesSearch && (
                                             <Button
                                                 variant="outline"
                                                 size="sm"

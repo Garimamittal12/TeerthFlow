@@ -61,7 +61,6 @@ export interface AlternativeRecommendation {
     ritualMatch: boolean;
     matchingRituals: RitualTiming[];
     score: number; // ranking score
-    hasPriorityAccess: boolean;
 }
 
 // Temple locations with coordinates and ritual timings

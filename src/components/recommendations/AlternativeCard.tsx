@@ -1,4 +1,4 @@
-import { Clock, MapPin, Route, Users, Star, Ticket, Calendar, ArrowRight } from "lucide-react";
+import { Clock, MapPin, Route, Users, Star, Calendar, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,6 @@ interface AlternativeCardProps {
     onReschedule: (templeId: string) => void;
     onSwap: (templeId: string) => void;
     onAddEvening: (templeId: string) => void;
-    onBookPriority: (templeId: string) => void;
 }
 
 const crowdBadgeClasses = {
@@ -26,7 +25,6 @@ export function AlternativeCard({
     onReschedule,
     onSwap,
     onAddEvening,
-    onBookPriority,
 }: AlternativeCardProps) {
     const isSameCity = selectedCity && recommendation.city.toLowerCase() === selectedCity.toLowerCase();
     const isNearby = recommendation.distance <= 50;
@@ -108,18 +106,12 @@ export function AlternativeCard({
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => onSwap(recommendation.templeId)}>
                     <ArrowRight className="h-3.5 w-3.5 mr-1.5" />
-                    Swap Today
+                    Swap Today Visit
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => onAddEvening(recommendation.templeId)}>
                     <Clock className="h-3.5 w-3.5 mr-1.5" />
-                    Evening Visit
+                    Swap Evening Visit
                 </Button>
-                {recommendation.hasPriorityAccess && (
-                    <Button variant="default" size="sm" onClick={() => onBookPriority(recommendation.templeId)}>
-                        <Ticket className="h-3.5 w-3.5 mr-1.5" />
-                        Priority Pass
-                    </Button>
-                )}
             </div>
         </div>
     );
