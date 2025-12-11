@@ -14,6 +14,8 @@ import {
 } from "@/data/itineraryData";
 import type { AlternativeRecommendation, RitualTiming } from "@/data/itineraryData";
 import { toast } from "sonner";
+import { useDashboardStore } from "@/hooks/useDashboardStore";
+import { temples as allTemples } from "@/data/mockData";
 
 interface RecommendationPanelProps {
     selectedTempleId?: string;
@@ -30,6 +32,7 @@ const crowdBadgeClasses = {
 export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }: RecommendationPanelProps) {
     const [recommendations, setRecommendations] = useState<AlternativeRecommendation[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const { recordAction } = useDashboardStore();
 
     const selectedTemple = useMemo(() => {
         if (!selectedTempleId) return null;
@@ -136,7 +139,6 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
                     ritualMatch: matchingRituals.length > 0,
                     matchingRituals,
                     score,
-                    hasPriorityAccess: Math.random() > 0.5, // Simulated
                 });
             });
 
@@ -158,23 +160,21 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
     }, [selectedTempleId, currentTime]);
 
     const handleReschedule = (templeId: string) => {
-        const temple = temples.find((t) => t.id === templeId);
+        const temple = allTemples.find((t) => t.id === templeId);
         toast.success(`${temple?.name} rescheduled to next best window`);
+        recordAction("Reschedule", templeId, temple?.name);
     };
 
     const handleSwap = (templeId: string) => {
-        const temple = temples.find((t) => t.id === templeId);
+        const temple = allTemples.find((t) => t.id === templeId);
         toast.success(`${temple?.name} swapped into current day`);
+        recordAction("Swap Today Visit", templeId, temple?.name);
     };
 
     const handleAddEvening = (templeId: string) => {
-        const temple = temples.find((t) => t.id === templeId);
+        const temple = allTemples.find((t) => t.id === templeId);
         toast.success(`${temple?.name} added as evening visit`);
-    };
-
-    const handleBookPriority = (templeId: string) => {
-        const temple = temples.find((t) => t.id === templeId);
-        toast.success(`Priority access booked for ${temple?.name}`);
+        recordAction("Swap Evening Visit", templeId, temple?.name);
     };
 
     if (!selectedTempleId || !selectedTemple) {
@@ -258,6 +258,7 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
                             size="sm"
                             onClick={generateRecommendations}
                             disabled={isLoading}
+                            className="hover:bg-gold/20 hover:text-foreground"
                         >
                             <RefreshCw className={cn("h-4 w-4 mr-1.5", isLoading && "animate-spin")} />
                             Refresh
@@ -280,7 +281,6 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
                                         onReschedule={handleReschedule}
                                         onSwap={handleSwap}
                                         onAddEvening={handleAddEvening}
-                                        onBookPriority={handleBookPriority}
                                     />
                                 </div>
                             ))}

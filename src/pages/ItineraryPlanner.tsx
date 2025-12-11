@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { format, addDays, differenceInDays } from "date-fns";
-import { Calendar, MapPin, Clock, Route, Plus, Trash2, Sparkles, Download, Share2 } from "lucide-react";
+import { Calendar, MapPin, Clock, Route, Plus, Trash2, Sparkles, Download, Share2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,11 +14,13 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
 import type { Temple } from "@/data/mockData";
+import { useDashboardStore } from "@/hooks/useDashboardStore";
 
 export default function ItineraryPlanner() {
     const {
         user
     } = useAuth();
+    const { saveItinerary } = useDashboardStore();
     const [startDate, setStartDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
     const [endDate, setEndDate] = useState<string>(format(addDays(new Date(), 3), "yyyy-MM-dd"));
     const [startLocation, setStartLocation] = useState<string>("Delhi");
@@ -77,7 +79,6 @@ export default function ItineraryPlanner() {
                 : Math.min(templesPerDay, remainingTemples.length);
             
             const dayTemples = remainingTemples.splice(0, templesForThisDay);
-            if (dayTemples.length === 0) break;
             
             const stops: ItineraryStop[] = [];
             let totalTravelTime = 0;
@@ -165,15 +166,13 @@ export default function ItineraryPlanner() {
                 }
             }
             
-            if (stops.length > 0) {
-                days.push({
-                    day,
-                    date: format(addDays(new Date(startDate), day - 1), "yyyy-MM-dd"),
-                    stops,
-                    totalTravelTime,
-                    totalDistance: Math.round(totalDistance * 10) / 10
-                });
-            }
+            days.push({
+                day,
+                date: format(addDays(new Date(startDate), day - 1), "yyyy-MM-dd"),
+                stops,
+                totalTravelTime,
+                totalDistance: Math.round(totalDistance * 10) / 10
+            });
         }
         
         // Verify all temples are included
@@ -217,106 +216,29 @@ export default function ItineraryPlanner() {
             }))
         });
     };
-    const handleSwap = (stopId: string) => {
-        if (!itinerary) return;
-        
-        // Find the stop to swap
-        let stopToSwap: ItineraryStop | null = null;
-        let dayIndex = -1;
-        let stopIndex = -1;
-        
-        for (let i = 0; i < itinerary.days.length; i++) {
-            const idx = itinerary.days[i].stops.findIndex(s => s.id === stopId);
-            if (idx !== -1) {
-                stopToSwap = itinerary.days[i].stops[idx];
-                dayIndex = i;
-                stopIndex = idx;
-                break;
-            }
-        }
-        
-        if (!stopToSwap) return;
-        
-        // Find alternative temples in the same city with low-medium crowd
-        const temple = temples.find(t => t.id === stopToSwap.templeId);
-        if (!temple) return;
-        
-        // Get recommendations from same city
-        const alternatives = temples.filter(t => 
-            t.city.toLowerCase() === temple.city.toLowerCase() && 
-            t.id !== stopToSwap.templeId &&
-            availableTemples.some(at => at.id === t.id)
-        );
-        
-        if (alternatives.length === 0) {
-            toast.info("No alternative temples found in the same city");
-            return;
-        }
-        
-        // For now, swap with first alternative (can be enhanced with crowd-based selection)
-        const alternativeTemple = alternatives[0];
-        const altLocation = templeLocations.find(l => l.templeId === alternativeTemple.id) || 
-                          getTempleLocation(alternativeTemple.id, alternativeTemple.city);
-        
-        if (!altLocation) return;
-        
-        // Update the stop
-        const updatedDays = itinerary.days.map((day, dIdx) => {
-            if (dIdx !== dayIndex) return day;
-            
-            return {
-                ...day,
-                stops: day.stops.map((stop, sIdx) => {
-                    if (sIdx !== stopIndex) return stop;
-                    
-                    // Recalculate times based on previous stop
-                    const prevStop = sIdx > 0 ? day.stops[sIdx - 1] : null;
-                    const prevCoords = prevStop 
-                        ? (templeLocations.find(l => l.templeId === prevStop.templeId) || 
-                           getTempleLocation(prevStop.templeId, temples.find(t => t.id === prevStop.templeId)?.city || ""))
-                        : (startCity ? { lat: startCity.lat, lng: startCity.lng } : { lat: 28.6139, lng: 77.209 });
-                    
-                    if (!prevCoords) return stop;
-                    
-                    const distance = calculateDistance(prevCoords.lat, prevCoords.lng, altLocation.lat, altLocation.lng);
-                    const travelTime = estimateTravelTime(distance);
-                    const arrivalTime = prevStop 
-                        ? prevStop.departureTime 
-                        : "06:00";
-                    const [arrHour, arrMin] = arrivalTime.split(":").map(Number);
-                    let currentTime = arrHour * 60 + arrMin + travelTime;
-                    const newArrHour = Math.floor(currentTime / 60);
-                    const newArrMin = currentTime % 60;
-                    currentTime += altLocation.avgVisitDuration;
-                    const newDepHour = Math.floor(currentTime / 60);
-                    const newDepMin = currentTime % 60;
-                    
-                    const suitableRitual = altLocation.ritualTimings.find(r => {
-                        const [rHour] = r.startTime.split(":").map(Number);
-                        return rHour >= newArrHour && rHour <= newDepHour;
-                    });
-                    
-                    return {
-                        ...stop,
-                        templeId: alternativeTemple.id,
-                        templeName: alternativeTemple.name,
-                        arrivalTime: `${newArrHour.toString().padStart(2, "0")}:${newArrMin.toString().padStart(2, "0")}`,
-                        departureTime: `${newDepHour.toString().padStart(2, "0")}:${newDepMin.toString().padStart(2, "0")}`,
-                        selectedRitual: suitableRitual,
-                        travelTimeFromPrevious: travelTime,
-                        distance,
-                    };
-                }),
-            };
-        });
-        
-        setItinerary({
-            ...itinerary,
-            days: updatedDays,
-        });
-        
-        toast.success(`Swapped to ${alternativeTemple.name}`);
+    const [dragging, setDragging] = useState<{ dayIndex: number; stopIndex: number } | null>(null);
+    const handleDragStart = (dayIndex: number, stopIndex: number) => {
+        setDragging({ dayIndex, stopIndex });
     };
+
+    const handleDrop = (targetDayIndex: number, targetStopIndex: number) => {
+        if (!itinerary || dragging === null) return;
+        const sourceDayIdx = dragging.dayIndex;
+        const sourceStopIdx = dragging.stopIndex;
+        const daysCopy = itinerary.days.map((d) => ({ ...d, stops: [...d.stops] }));
+
+        const [moved] = daysCopy[sourceDayIdx].stops.splice(sourceStopIdx, 1);
+        if (!moved) return;
+        moved.day = daysCopy[targetDayIndex].day;
+
+        const insertIndex = targetStopIndex;
+        daysCopy[targetDayIndex].stops.splice(insertIndex, 0, moved);
+
+        setItinerary({ ...itinerary, days: daysCopy });
+        setDragging(null);
+    };
+
+    const handleDragEnd = () => setDragging(null);
     const handleSelectRitual = (stopId: string, ritual: RitualTiming) => {
         if (!itinerary) return;
         setItinerary({
@@ -441,6 +363,13 @@ export default function ItineraryPlanner() {
         toast.success("Itinerary image downloaded");
     };
     const allStops = itinerary?.days.flatMap(d => d.stops) || [];
+
+    const handleSaveItinerary = () => {
+        if (!itinerary) return;
+        const name = `${startLocation} Trip – ${format(new Date(startDate), "MMM yyyy")}`;
+        saveItinerary({ ...itinerary, startLocation }, name);
+        toast.success("Itinerary saved to dashboard");
+    };
     if (!user) {
         return <div className="min-h-screen flex flex-col bg-background">
             <Header />
@@ -591,6 +520,10 @@ export default function ItineraryPlanner() {
                                 <Download className="h-4 w-4 mr-1.5" />
                                 Download
                             </Button>
+                            <Button variant="outline" size="sm" onClick={handleSaveItinerary}>
+                                <Star className="h-4 w-4 mr-1.5" />
+                                Favorite / Interested
+                            </Button>
                             <Button variant="outline" size="sm">
                                 <Share2 className="h-4 w-4 mr-1.5" />
                                 Share
@@ -600,7 +533,19 @@ export default function ItineraryPlanner() {
 
                     {/* Day-by-Day Itinerary */}
                     <div className="space-y-8">
-                        {itinerary.days.map(day => <DayItineraryCard key={day.day} dayItinerary={day} onToggleLock={handleToggleLock} onSwap={handleSwap} onSelectRitual={handleSelectRitual} />)}
+                        {itinerary.days.map((day, idx) => (
+                            <DayItineraryCard
+                                key={day.day}
+                                dayItinerary={day}
+                                dayIndex={idx}
+                                onToggleLock={handleToggleLock}
+                                onSelectRitual={handleSelectRitual}
+                                onDragStart={handleDragStart}
+                                onDrop={handleDrop}
+                                onDragEnd={handleDragEnd}
+                                dragging={dragging}
+                            />
+                        ))}
                     </div>
                 </>}
             </div>

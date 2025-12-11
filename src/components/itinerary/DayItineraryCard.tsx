@@ -5,16 +5,24 @@ import type { DayItinerary, RitualTiming } from "@/data/itineraryData";
 
 interface DayItineraryCardProps {
     dayItinerary: DayItinerary;
+    dayIndex: number;
     onToggleLock: (stopId: string) => void;
-    onSwap: (stopId: string) => void;
     onSelectRitual: (stopId: string, ritual: RitualTiming) => void;
+    onDragStart: (dayIndex: number, stopIndex: number) => void;
+    onDrop: (dayIndex: number, targetIndex: number) => void;
+    onDragEnd: () => void;
+    dragging: { dayIndex: number; stopIndex: number } | null;
 }
 
 export function DayItineraryCard({
     dayItinerary,
+    dayIndex,
     onToggleLock,
-    onSwap,
     onSelectRitual,
+    onDragStart,
+    onDrop,
+    onDragEnd,
+    dragging,
 }: DayItineraryCardProps) {
     return (
         <div className="space-y-4">
@@ -45,20 +53,44 @@ export function DayItineraryCard({
             </div>
 
             {/* Stops */}
-            <div className="space-y-3 relative">
-                {/* Connection line */}
-                <div className="absolute left-[1.2rem] top-8 bottom-8 w-0.5 bg-border" />
+            <div className="relative space-y-2 pl-4">
+                <div className="absolute left-10 top-4 bottom-4 w-0.5 bg-border" />
+
+                {dayItinerary.stops.length === 0 && (
+                    <div className="p-4 rounded-lg border border-dashed border-border text-sm text-muted-foreground">
+                        No temples assigned for this day yet.
+                    </div>
+                )}
 
                 {dayItinerary.stops.map((stop, index) => (
-                    <ItineraryStopCard
-                        key={stop.id}
-                        stop={stop}
-                        index={index}
-                        onToggleLock={onToggleLock}
-                        onSwap={onSwap}
-                        onSelectRitual={onSelectRitual}
-                    />
+                    <div key={stop.id} className="space-y-2">
+                        <div
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                onDrop(dayIndex, index);
+                            }}
+                            className="h-4"
+                        />
+                        <ItineraryStopCard
+                            stop={stop}
+                            index={index}
+                            onToggleLock={onToggleLock}
+                            onSelectRitual={onSelectRitual}
+                            onDragStart={() => onDragStart(dayIndex, index)}
+                            onDragEnd={onDragEnd}
+                            isDragging={dragging?.dayIndex === dayIndex && dragging?.stopIndex === index}
+                        />
+                    </div>
                 ))}
+                <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                        e.preventDefault();
+                        onDrop(dayIndex, dayItinerary.stops.length);
+                    }}
+                    className="h-6"
+                />
             </div>
         </div>
     );

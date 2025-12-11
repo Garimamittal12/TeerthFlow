@@ -1,17 +1,11 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, Home, Info, Mail, User, LogOut, Calendar } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const navItems = [
     { label: "Home", path: "/", icon: Home },
@@ -23,6 +17,7 @@ const navItems = [
 export function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
     const { user, signOut, loading } = useAuth();
 
     const handleSignOut = async () => {
@@ -78,29 +73,31 @@ export function Header() {
                     {loading ? (
                         <div className="h-9 w-9 rounded-xl bg-muted animate-pulse" />
                     ) : user ? (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-9 w-9 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary"
-                                >
-                                    <User className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                                <div className="px-2 py-1.5">
-                                    <p className="text-sm font-medium text-foreground truncate">
-                                        {user.email}
-                                    </p>
-                                </div>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    Sign Out
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center gap-2">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-9 w-9 rounded-xl bg-primary/10 hover:bg-gold/25 text-primary"
+                                        onClick={() => navigate("/dashboard")}
+                                        aria-label="Open dashboard"
+                                    >
+                                        <User className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Open your dashboard</TooltipContent>
+                            </Tooltip>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 rounded-xl"
+                                onClick={handleSignOut}
+                                aria-label="Sign out"
+                            >
+                                <LogOut className="h-4 w-4" />
+                            </Button>
+                        </div>
                     ) : (
                         <Link to="/auth">
                             <Button
@@ -154,6 +151,22 @@ export function Header() {
                                 </Link>
                             );
                         })}
+
+                        {user && (
+                            <Link
+                                to="/dashboard"
+                                onClick={() => setIsMenuOpen(false)}
+                                className={cn(
+                                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                                    location.pathname === "/dashboard"
+                                        ? "bg-primary/10 text-primary"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                )}
+                            >
+                                <User className="h-5 w-5" />
+                                Dashboard
+                            </Link>
+                        )}
 
                         {/* Mobile Auth Link */}
                         {!user && (
