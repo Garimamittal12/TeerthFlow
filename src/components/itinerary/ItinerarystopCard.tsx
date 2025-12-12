@@ -50,9 +50,9 @@ export function ItineraryStopCard({
 
             <div
                 className={cn(
-                    "card-elevated p-4 transition-all",
+                    "card-elevated p-4 transition-all duration-300 ease-in-out",
                     stop.isLocked && "ring-2 ring-warning",
-                    isDragging && "opacity-60"
+                    isDragging && "opacity-60 scale-[0.995]"
                 )}
                 draggable
                 onDragStart={onDragStart}

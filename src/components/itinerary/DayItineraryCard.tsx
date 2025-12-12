@@ -8,10 +8,10 @@ interface DayItineraryCardProps {
     dayIndex: number;
     onToggleLock: (stopId: string) => void;
     onSelectRitual: (stopId: string, ritual: RitualTiming) => void;
-    onDragStart: (dayIndex: number, stopIndex: number) => void;
+    onDragStart: (stopId: string, fromDayIndex: number) => void;
     onDrop: (dayIndex: number, targetIndex: number) => void;
     onDragEnd: () => void;
-    dragging: { dayIndex: number; stopIndex: number } | null;
+    dragging: { stopId: string; fromDayIndex: number } | null;
 }
 
 export function DayItineraryCard({
@@ -24,8 +24,13 @@ export function DayItineraryCard({
     onDragEnd,
     dragging,
 }: DayItineraryCardProps) {
+
+    // Use stops directly - they're already correctly assigned to this day
+    const stopsForDay = dayItinerary.stops;
+
     return (
         <div className="space-y-4">
+            
             {/* Day Header */}
             <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-transparent rounded-xl">
                 <div className="flex items-center gap-3">
@@ -40,6 +45,7 @@ export function DayItineraryCard({
                         </div>
                     </div>
                 </div>
+
                 <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1.5">
                         <Clock className="h-4 w-4 text-muted-foreground" />
@@ -56,14 +62,16 @@ export function DayItineraryCard({
             <div className="relative space-y-2 pl-4">
                 <div className="absolute left-10 top-4 bottom-4 w-0.5 bg-border" />
 
-                {dayItinerary.stops.length === 0 && (
+                {stopsForDay.length === 0 && (
                     <div className="p-4 rounded-lg border border-dashed border-border text-sm text-muted-foreground">
                         No temples assigned for this day yet.
                     </div>
                 )}
 
-                {dayItinerary.stops.map((stop, index) => (
+                {stopsForDay.map((stop, index) => (
                     <div key={stop.id} className="space-y-2">
+                        
+                        {/* Drop Zone */}
                         <div
                             onDragOver={(e) => e.preventDefault()}
                             onDrop={(e) => {
@@ -72,22 +80,25 @@ export function DayItineraryCard({
                             }}
                             className="h-4"
                         />
+
                         <ItineraryStopCard
                             stop={stop}
                             index={index}
                             onToggleLock={onToggleLock}
                             onSelectRitual={onSelectRitual}
-                            onDragStart={() => onDragStart(dayIndex, index)}
+                            onDragStart={() => onDragStart(stop.id, dayIndex)}
                             onDragEnd={onDragEnd}
-                            isDragging={dragging?.dayIndex === dayIndex && dragging?.stopIndex === index}
+                            isDragging={dragging?.stopId === stop.id}
                         />
                     </div>
                 ))}
+
+                {/* Drop zone at end */}
                 <div
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => {
                         e.preventDefault();
-                        onDrop(dayIndex, dayItinerary.stops.length);
+                        onDrop(dayIndex, stopsForDay.length);
                     }}
                     className="h-6"
                 />
