@@ -177,17 +177,6 @@ const generateItinerary = useCallback(() => {
         toast.warning(`${missingTemples.length} temple(s) were not included in the itinerary.`);
     }
 
-    // Debug: Log distribution
-    console.log("Itinerary generated:", {
-        totalTemples: selected.length,
-        tripDays,
-        days: days.map(d => ({
-            day: d.day,
-            stopsCount: d.stops.length,
-            stops: d.stops.map(s => s.templeName)
-        }))
-    });
-
     const finalItinerary: Itinerary = {
         id: `itin_${Date.now()}`,
         startDate,
