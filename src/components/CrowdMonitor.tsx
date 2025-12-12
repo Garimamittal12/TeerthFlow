@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { TrendingUp, Users, Clock, AlertTriangle, Bell, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HistoricalChart } from "@/components/HistoricalChart";
@@ -7,6 +7,7 @@ import { getCrowdLevel } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
+import { useCrowdCount } from "@/hooks/useCrowdCount";
 
 interface CrowdMonitorProps {
     temple: Temple;
@@ -28,6 +29,79 @@ export function CrowdMonitor({ temple, device, initialCrowd }: CrowdMonitorProps
     const { permission, requestPermission, sendNotification, isSupported } = useNotifications();
     const { toast } = useToast();
 
+    // Use API for temple_001
+    const isTemple001 = temple.id === "temple_001";
+    const { count: apiCount, isOnline: apiIsOnline, lastUpdated: apiLastUpdated, error: apiError } = useCrowdCount({
+        apiUrl: "10.128.103.124/count",
+        templeId: temple.id,
+        enabled: isTemple001,
+        pollInterval: 2000, // Poll every 2 seconds for real-time updates
+    });
+
+    // Create a device object with updated connection status for temple_001
+    const updatedDevice = useMemo(() => {
+        if (!device) return device;
+        if (isTemple001) {
+            return {
+                ...device,
+                isConnected: apiIsOnline,
+                lastPing: apiLastUpdated || device.lastPing,
+            };
+        }
+        return device;
+    }, [device, isTemple001, apiIsOnline, apiLastUpdated]);
+
+    // Calculate next hour prediction based on current count and historical trends
+    const calculateNextHourPrediction = useCallback((currentCount: number, history: { time: string; count: number }[]): number => {
+        if (history.length < 2) {
+            // If we don't have enough history, use a simple growth estimate (5-15% increase)
+            const growthRate = 0.6; // 10% average growth
+            return Math.min(
+                Math.round(currentCount * (1 + growthRate)),
+                temple.totalCapacity
+            );
+        }
+
+        // Calculate trend from recent history (last 6 data points or all if less)
+        const recentHistory = history.slice(-6);
+        if (recentHistory.length >= 2) {
+            const oldest = recentHistory[0].count;
+            const newest = recentHistory[recentHistory.length - 1].count;
+            const timeDiff = new Date(recentHistory[recentHistory.length - 1].time).getTime() - 
+                           new Date(recentHistory[0].time).getTime();
+            
+            // Calculate average change per hour
+            const hoursDiff = timeDiff / (1000 * 60 * 60); // Convert to hours
+            const changePerHour = hoursDiff > 0 ? (newest - oldest) / hoursDiff : 0;
+            
+            // Predict next hour: current + change per hour
+            let prediction = currentCount + changePerHour;
+            
+            // Apply some smoothing and ensure reasonable bounds
+            // If trend is very steep, cap it at 20% increase per hour
+            const maxIncrease = currentCount * 0.2;
+            if (changePerHour > maxIncrease) {
+                prediction = currentCount + maxIncrease;
+            }
+            
+            // If trend is decreasing, don't predict below 0
+            if (prediction < 0) {
+                prediction = Math.max(0, currentCount * 0.9); // At least 90% of current
+            }
+            
+            // Cap at total capacity
+            prediction = Math.min(Math.round(prediction), temple.totalCapacity);
+            
+            return prediction;
+        }
+        
+        // Fallback: simple percentage increase
+        return Math.min(
+            Math.round(currentCount * 1.1),
+            temple.totalCapacity
+        );
+    }, [temple.totalCapacity]);
+
     const handleEnableNotifications = async () => {
         const granted = await requestPermission();
         if (granted) {
@@ -44,8 +118,86 @@ export function CrowdMonitor({ temple, device, initialCrowd }: CrowdMonitorProps
         }
     };
 
+    // Initialize crowd from initialCrowd if available and we don't have crowd data yet
+    useEffect(() => {
+        if (isTemple001 && !crowd && initialCrowd) {
+            setCrowd(initialCrowd);
+        }
+    }, [isTemple001, initialCrowd, crowd]);
+
+    // Update crowd data when API count changes for temple_001
+    useEffect(() => {
+        if (isTemple001 && apiCount !== null) {
+            const newLevel = getCrowdLevel(apiCount, temple.totalCapacity);
+            const now = apiLastUpdated || new Date().toISOString();
+            
+            if (crowd) {
+                // Update history first
+                const updatedHistory = [
+                    ...crowd.history.slice(-23),
+                    { time: now, count: apiCount }
+                ];
+                
+                // Calculate next hour prediction based on current count and history
+                const nextHourPred = calculateNextHourPrediction(apiCount, updatedHistory);
+                
+                // Update existing crowd data
+                setCrowd({
+                    ...crowd,
+                    currentCount: apiCount,
+                    crowdLevel: newLevel,
+                    nextHourPrediction: nextHourPred,
+                    lastUpdated: now,
+                    history: updatedHistory,
+                });
+            } else {
+                // Initialize crowd data if it doesn't exist
+                const initialHistory = [{ time: now, count: apiCount }];
+                const nextHourPred = calculateNextHourPrediction(apiCount, initialHistory);
+                
+                setCrowd({
+                    templeId: temple.id,
+                    currentCount: apiCount,
+                    crowdLevel: newLevel,
+                    nextHourPrediction: nextHourPred,
+                    lastUpdated: now,
+                    history: initialHistory,
+                });
+            }
+        }
+        // Note: When apiCount is null (device offline), we preserve the existing crowd data
+        // The crowd state will maintain the last successfully fetched count
+    }, [apiCount, apiLastUpdated, isTemple001, temple.totalCapacity, temple.id, crowd, calculateNextHourPrediction]);
+
+    // Show API connection status alerts (only if we don't have previous data)
+    useEffect(() => {
+        if (isTemple001) {
+            // Only show error alerts if we don't have any crowd data yet (first time failure)
+            // If we have previous data, just show device offline status without error alerts
+            if (apiError && !crowd) {
+                setAlerts(prev => {
+                    const alertMsg = `API connection error: ${apiError}`;
+                    // Remove old API error and add new one
+                    const filtered = prev.filter(alert => !alert.includes("API connection error"));
+                    if (!filtered.includes(alertMsg)) {
+                        return [...filtered, alertMsg];
+                    }
+                    return filtered;
+                });
+            } else if (apiIsOnline) {
+                // Remove API error alerts when online
+                setAlerts(prev => prev.filter(alert => !alert.includes("API connection error")));
+            } else if (!apiIsOnline && crowd) {
+                // Device is offline but we have previous data - remove error alerts
+                // The "Device disconnected" alert will be handled by the device disconnect effect
+                // This ensures users see the last fetched count even when offline
+                setAlerts(prev => prev.filter(alert => !alert.includes("API connection error")));
+            }
+        }
+    }, [apiError, apiIsOnline, isTemple001, crowd]);
+
     const updateCrowd = useCallback(() => {
-        if (!crowd) return;
+        if (!crowd || isTemple001) return; // Don't simulate for temple_001 (use API instead)
 
         const delta = Math.floor(Math.random() * 21) - 8; // -8 to +12
         const newCount = Math.max(0, crowd.currentCount + delta);
@@ -116,9 +268,18 @@ export function CrowdMonitor({ temple, device, initialCrowd }: CrowdMonitorProps
         return () => clearTimeout(timer);
     }, [isSimulating, updateCrowd]);
 
-    // Device disconnect alert
+    // Device disconnect alert (use updatedDevice for temple_001)
+    // For temple_001, only show alert if we don't have previous data to display
     useEffect(() => {
-        if (device && !device.isConnected) {
+        const deviceToCheck = updatedDevice || device;
+        if (deviceToCheck && !deviceToCheck.isConnected) {
+            // For temple_001, only show disconnect alert if we don't have previous data
+            // If we have previous data, just show device offline status without alert
+            if (isTemple001 && crowd) {
+                // Don't show alert, just keep showing previous data
+                return;
+            }
+            
             const alertMsg = "Device disconnected! Live data unavailable.";
             setAlerts(prev => {
                 if (!prev.includes(alertMsg)) {
@@ -126,15 +287,18 @@ export function CrowdMonitor({ temple, device, initialCrowd }: CrowdMonitorProps
                     if (permission === "granted") {
                         sendNotification(`📡 ${temple.name} - Device Offline`, {
                             body: "IoT device disconnected. Live crowd data is temporarily unavailable.",
-                            tag: `offline-${device.id}`,
+                            tag: `offline-${deviceToCheck.id}`,
                         });
                     }
                     return [...prev, alertMsg];
                 }
                 return prev;
             });
+        } else if (deviceToCheck && deviceToCheck.isConnected) {
+            // Remove disconnect alert when device comes online (for all temples)
+            setAlerts(prev => prev.filter(alert => alert !== "Device disconnected! Live data unavailable."));
         }
-    }, [device, permission, sendNotification, temple.name]);
+    }, [updatedDevice, device, permission, sendNotification, temple.name, isTemple001, crowd]);
 
     const crowdLevel = crowd ? getCrowdLevel(crowd.currentCount, temple.totalCapacity) : "Low";
     const capacityPercentage = crowd ? Math.round((crowd.currentCount / temple.totalCapacity) * 100) : 0;
@@ -189,6 +353,21 @@ export function CrowdMonitor({ temple, device, initialCrowd }: CrowdMonitorProps
             <div className="card-elevated p-6">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="font-display text-lg font-semibold">Current Crowd</h3>
+                    {isTemple001 && (
+                        <div className="flex items-center gap-2">
+                            {apiIsOnline ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 text-success text-xs font-medium">
+                                    <span className="w-2 h-2 bg-success rounded-full animate-pulse" />
+                                    Device Online
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-destructive/10 text-destructive text-xs font-medium">
+                                    <span className="w-2 h-2 bg-destructive rounded-full" />
+                                    Device Offline
+                                </span>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">

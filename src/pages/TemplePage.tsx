@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { MapPin, Clock, Calendar, Building2, Star, Image as ImageIcon } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -16,6 +16,7 @@ import {
     type Device,
     type CrowdData,
 } from "@/data/mockData";
+import { useCrowdCount } from "@/hooks/useCrowdCount";
 
 export default function TemplePage() {
     const { templeId } = useParams<{ templeId: string }>();
@@ -25,6 +26,25 @@ export default function TemplePage() {
     const [crowd, setCrowd] = useState<CrowdData | undefined>();
     const [loading, setLoading] = useState(true);
     const [activeImage, setActiveImage] = useState(0);
+
+    // Use API for temple_001
+    const isTemple001 = templeId === "temple_001";
+    const { isOnline: apiIsOnline, lastUpdated: apiLastUpdated } = useCrowdCount({
+        apiUrl: "10.128.103.124/count",
+        templeId: templeId || "",
+        enabled: isTemple001,
+        pollInterval: 1000, // Poll every 1 second for real-time updates
+    });
+
+    // Update device status for temple_001 based on API connection
+    const updatedDevice = useMemo(() => {
+        if (!device || !isTemple001) return device;
+        return {
+            ...device,
+            isConnected: apiIsOnline,
+            lastPing: apiLastUpdated || device.lastPing,
+        };
+    }, [device, isTemple001, apiIsOnline, apiLastUpdated]);
 
     useEffect(() => {
         if (!templeId) return;
@@ -150,7 +170,7 @@ export default function TemplePage() {
                         {/* Main Content */}
                         <div className="lg:col-span-2 space-y-8">
                             {/* Crowd Monitor */}
-                            <CrowdMonitor temple={temple} device={device} initialCrowd={crowd} />
+                            <CrowdMonitor temple={temple} device={updatedDevice || device} initialCrowd={crowd} />
 
                             {/* Nearby Recommendations based on live crowd */}
                             <div className="card-elevated p-6">
@@ -224,28 +244,35 @@ export default function TemplePage() {
                             </div>
 
                             {/* Device Details Card */}
-                            {device && (
+                            {(updatedDevice || device) && (
                                 <div className="card-elevated p-6">
                                     <h3 className="font-display text-lg font-semibold mb-4">IoT Device</h3>
                                     <div className="space-y-3 text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Device ID</span>
-                                            <span className="font-mono">{device.id}</span>
+                                            <span className="font-mono">{(updatedDevice || device)!.id}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Status</span>
-                                            <span className={device.isConnected ? "text-success" : "text-destructive"}>
-                                                {device.isConnected ? "Online" : "Offline"}
+                                            <span className={(updatedDevice || device)!.isConnected ? "text-success" : "text-destructive"}>
+                                                {(updatedDevice || device)!.isConnected ? "Online" : "Offline"}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Signal</span>
-                                            <span>{device.signalStrength}</span>
+                                            <span>{(updatedDevice || device)!.signalStrength}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Last Ping</span>
-                                            <span>{new Date(device.lastPing).toLocaleString()}</span>
+                                            <span>{new Date((updatedDevice || device)!.lastPing).toLocaleString()}</span>
                                         </div>
+                                        {isTemple001 && (
+                                            <div className="pt-2 mt-2 border-t border-border">
+                                                <p className="text-xs text-muted-foreground">
+                                                    Connected to hardware API
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
