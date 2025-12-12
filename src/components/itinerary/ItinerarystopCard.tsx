@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { temples, crowdData, getCrowdLevel } from "@/data/mockData";
-import { templeLocations } from "@/data/itineraryData";
+import { templeLocations, getTempleLocation } from "@/data/itineraryData";
 import type { ItineraryStop, RitualTiming } from "@/data/itineraryData";
 import { useState } from "react";
 
@@ -35,11 +35,62 @@ export function ItineraryStopCard({
 }: ItineraryStopCardProps) {
     const [expanded, setExpanded] = useState(false);
     const temple = temples.find((t) => t.id === stop.templeId);
-    const location = templeLocations.find((l) => l.templeId === stop.templeId);
+    
+    // Use getTempleLocation as fallback, just like in generation logic
+    const location = templeLocations.find((l) => l.templeId === stop.templeId) 
+        || (temple ? getTempleLocation(stop.templeId, temple.city) : null);
+    
     const crowd = crowdData.find((c) => c.templeId === stop.templeId);
     const crowdLevel = crowd && temple ? getCrowdLevel(crowd.currentCount, temple.totalCapacity) : "Low";
 
-    if (!temple || !location) return null;
+    // Only return null if temple is not found (location can be generated)
+    if (!temple) return null;
+    
+    // If location is still null after fallback, use minimal defaults
+    if (!location) {
+        // Fallback: render with minimal info if location can't be determined
+        return (
+            <div className="grid grid-cols-[80px_auto] items-start gap-4 relative">
+                <div className="flex flex-col items-center">
+                    <span className="text-sm font-semibold text-primary">{stop.arrivalTime}</span>
+                    <div className="w-3 h-3 rounded-full bg-primary mt-2 border-2 border-white shadow" />
+                </div>
+                <div className={cn(
+                    "card-elevated p-4 transition-all duration-300 ease-in-out",
+                    stop.isLocked && "ring-2 ring-warning",
+                    isDragging && "opacity-60 scale-[0.995]"
+                )}>
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                            <div className={cn(
+                                "flex items-center justify-center w-10 h-10 rounded-full font-bold text-lg",
+                                stop.isLocked
+                                    ? "bg-warning text-warning-foreground"
+                                    : "bg-primary text-primary-foreground"
+                            )}>
+                                {index + 1}
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-display font-semibold text-foreground">{stop.templeName || temple.name}</h4>
+                                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                    <MapPin className="h-3.5 w-3.5" />
+                                    <span>{temple.city}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1.5">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{stop.arrivalTime}</span>
+                            <span className="text-muted-foreground">-</span>
+                            <span className="font-medium">{stop.departureTime}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="grid grid-cols-[80px_auto] items-start gap-4 relative">
@@ -50,9 +101,9 @@ export function ItineraryStopCard({
 
             <div
                 className={cn(
-                    "card-elevated p-4 transition-all",
+                    "card-elevated p-4 transition-all duration-300 ease-in-out",
                     stop.isLocked && "ring-2 ring-warning",
-                    isDragging && "opacity-60"
+                    isDragging && "opacity-60 scale-[0.995]"
                 )}
                 draggable
                 onDragStart={onDragStart}

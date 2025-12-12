@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { Itinerary, DayItinerary } from "@/data/itineraryData";
 
 type ActionType = "Reschedule" | "Swap Today Visit" | "Swap Evening Visit";
 
@@ -53,7 +54,6 @@ const loadState = (): DashboardState => {
         return {
             ...defaultState,
             ...parsed,
-            userInfo: { ...defaultState.userInfo, ...parsed.userInfo },
         };
     } catch {
         return defaultState;
@@ -166,11 +166,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     );
 }
 
-export const useDashboardStore = () => {
+export function useDashboardStore() {
     const context = useContext(DashboardContext);
     if (!context) {
         throw new Error("useDashboardStore must be used within DashboardProvider");
     }
     return context;
-};
+}
 
