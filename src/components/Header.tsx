@@ -22,6 +22,7 @@ export function Header() {
 
     const handleSignOut = async () => {
         await signOut();
+        navigate("/");
     };
 
     return (
@@ -99,7 +100,7 @@ export function Header() {
                             </Button>
                         </div>
                     ) : (
-                        <Link to="/auth">
+                        <Link to="/login">
                             <Button
                                 variant="default"
                                 size="sm"
@@ -171,7 +172,7 @@ export function Header() {
                         {/* Mobile Auth Link */}
                         {!user && (
                             <Link
-                                to="/auth"
+                                to="/login"
                                 onClick={() => setIsMenuOpen(false)}
                                 className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-primary/10 text-primary"
                             >

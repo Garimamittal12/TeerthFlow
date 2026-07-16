@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Itinerary, DayItinerary } from "@/data/itineraryData";
+import { useAuth } from "@/hooks/useAuth";
 
 type ActionType = "Reschedule" | "Swap Today Visit" | "Swap Evening Visit";
 
@@ -35,7 +36,8 @@ interface DashboardContextValue extends DashboardState {
     deleteItinerary: (itineraryId: string) => void;
 }
 
-const storageKey = "teerthflow-dashboard";
+const storagePrefix = "teerthflow-dashboard";
+const legacyStorageKey = "teerthflow-dashboard";
 
 const defaultState: DashboardState = {
     selectedActions: [],
@@ -45,9 +47,11 @@ const defaultState: DashboardState = {
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
 
-const loadState = (): DashboardState => {
+const storageKeyFor = (userId: string) => `${storagePrefix}:${userId}`;
+
+const loadState = (userId: string): DashboardState => {
     if (typeof window === "undefined") return defaultState;
-    const stored = localStorage.getItem(storageKey);
+    const stored = localStorage.getItem(storageKeyFor(userId));
     if (!stored) return defaultState;
     try {
         const parsed = JSON.parse(stored) as DashboardState;
@@ -61,18 +65,33 @@ const loadState = (): DashboardState => {
 };
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
-    const [state, setState] = useState<DashboardState>(() => loadState());
+    const { user } = useAuth();
+    const userId = user?.id ?? null;
+    const [state, setState] = useState<DashboardState>(defaultState);
+    const [hydrated, setHydrated] = useState(false);
 
+    // Load (or reset) per-user data whenever the session user changes
     useEffect(() => {
-        setState(loadState());
-    }, []);
+        if (!userId) {
+            setState(defaultState);
+            setHydrated(false);
+            return;
+        }
+        setState(loadState(userId));
+        setHydrated(true);
+    }, [userId]);
 
+    // Persist only after hydrate, and only for the signed-in user
     useEffect(() => {
-        if (typeof window === "undefined") return;
-        localStorage.setItem(storageKey, JSON.stringify(state));
-    }, [state]);
+        if (!userId || !hydrated || typeof window === "undefined") return;
+        localStorage.setItem(storageKeyFor(userId), JSON.stringify(state));
+        // Remove legacy shared key so data no longer leaks across accounts
+        localStorage.removeItem(legacyStorageKey);
+    }, [state, userId, hydrated]);
 
     const recordAction = (type: ActionType, templeId?: string, templeName?: string) => {
+        if (!userId) return;
+
         const timestamp = new Date().toISOString();
         const newEntry: DashboardAction = {
             id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -83,7 +102,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         };
 
         setState((prev) => {
-            const selectedActions = prev.selectedActions.some((action) => action.type === type && action.templeId === templeId)
+            const selectedActions = prev.selectedActions.some(
+                (action) => action.type === type && action.templeId === templeId
+            )
                 ? prev.selectedActions
                 : [...prev.selectedActions, newEntry];
 
@@ -96,10 +117,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     };
 
     const clearHistory = () => {
+        if (!userId) return;
         setState((prev) => ({ ...prev, history: [] }));
     };
 
     const saveItinerary = (itinerary: Itinerary, name: string) => {
+        if (!userId) return;
+
         const visitedTemples: Record<string, boolean> = {};
         itinerary.days.forEach((day) =>
             day.stops.forEach((stop) => {
@@ -124,6 +148,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     };
 
     const toggleVisited = (itineraryId: string, templeId: string) => {
+        if (!userId) return;
         setState((prev) => ({
             ...prev,
             savedItineraries: prev.savedItineraries.map((itin) =>
@@ -141,6 +166,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     };
 
     const deleteItinerary = (itineraryId: string) => {
+        if (!userId) return;
         setState((prev) => ({
             ...prev,
             savedItineraries: prev.savedItineraries.filter((itin) => itin.id !== itineraryId),
@@ -156,7 +182,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
             toggleVisited,
             deleteItinerary,
         }),
-        [state],
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- actions close over userId; state drives value
+        [state, userId],
     );
 
     return (
@@ -173,4 +200,3 @@ export function useDashboardStore() {
     }
     return context;
 }
-

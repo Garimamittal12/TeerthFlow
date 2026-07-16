@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
 import { DashboardProvider } from "@/hooks/useDashboardStore";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import StatePage from "./pages/StatePage";
 import CityPage from "./pages/CityPage";
@@ -30,14 +31,29 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/state/:stateId" element={<StatePage />} />
                 <Route path="/state/:stateId/city/:cityName" element={<CityPage />} />
                 <Route path="/temple/:templeId" element={<TemplePage />} />
-                <Route path="/itinerary" element={<ItineraryPlanner />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/login" element={<Auth />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/itinerary"
+                  element={
+                    <ProtectedRoute>
+                      <ItineraryPlanner />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

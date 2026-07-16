@@ -35,7 +35,8 @@ export default function Dashboard() {
                             Welcome back, {displayName}
                         </h1>
                         <p className="text-muted-foreground max-w-2xl">
-                            Your recent actions and saved preferences stay with you. All data lives in your browser so you can pick up where you left off.
+                            Your itineraries, visit swaps, and reschedule actions are saved to your account
+                            (stored locally per user ID so they never mix with another pilgrim&apos;s data).
                         </p>
                     </div>
 

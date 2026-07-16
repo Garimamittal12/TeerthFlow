@@ -4,7 +4,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { format, addDays, differenceInDays } from "date-fns";
-import { Calendar, MapPin, Clock, Route, Plus, Trash2, Sparkles, Download, Share2, Star } from "lucide-react";
+import { Plus, Sparkles, Download, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,13 +16,10 @@ import { temples } from "@/data/mockData";
 import { majorCities, templeLocations, calculateDistance, estimateTravelTime, getTempleLocation } from "@/data/itineraryData";
 import type { Itinerary, DayItinerary, ItineraryStop, RitualTiming } from "@/data/itineraryData";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
-import { Link } from "react-router-dom";
 import type { Temple } from "@/data/mockData";
 import { useDashboardStore } from "@/hooks/useDashboardStore";
 
 export default function ItineraryPlanner() {
-    const { user } = useAuth();
     const { saveItinerary } = useDashboardStore();
 
     const [startDate, setStartDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
@@ -343,23 +340,6 @@ const generateItinerary = useCallback(() => {
     // ---------------------------------------------
     //  UI RENDER
     // ---------------------------------------------
-
-    if (!user) {
-        return (
-            <div className="min-h-screen flex flex-col bg-background">
-                <Header />
-                <main className="flex-1 flex items-center justify-center">
-                    <div className="text-center p-8">
-                        <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                        <h2 className="font-display text-2xl font-bold mb-2">Sign In Required</h2>
-                        <Link to="/auth">
-                            <Button>Sign In</Button>
-                        </Link>
-                    </div>
-                </main>
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen flex flex-col bg-background">

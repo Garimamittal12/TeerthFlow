@@ -60,7 +60,7 @@ A cloud dashboard displays live & predicted crowd load and helps visitors plan s
 - `src/pages/*`: Routes (home, dashboard, itinerary, temple/state details, auth).
 - `src/components/*`: UI building blocks, charts, cards, and layout.
 - `src/data/mockData.ts`: Mock states/temples/crowd data and helpers.
-- `src/integrations/supabase/*`: Supabase client and generated types.
+- `src/integration/supabase/*`: Supabase client and generated types.
 - `Density Detection and alert generation models/alert.py`: Optional CV/alert service using YuNet + GRU.
 
 ## Prerequisites
@@ -80,11 +80,20 @@ npm run preview    # serve the production build locally
 ```
 
 ## Required Environment Variables
-Create a `.env` file in `TeerthFlow/` (Vite uses the `VITE_` prefix):
+Create a `.env` file in `TeerthFlow/` (Vite uses the `VITE_` prefix). See `.env.example` for a template:
 ```
 VITE_SUPABASE_URL=<your-supabase-url>
 VITE_SUPABASE_PUBLISHABLE_KEY=<your-supabase-anon-key>
+VITE_SUPABASE_PROJECT_ID=<your-project-ref>   # optional; used by supabase/config.toml
 ```
+
+### Supabase Auth setup
+1. In the [Supabase Dashboard](https://supabase.com/dashboard) → **Authentication** → **Providers**, enable **Email**.
+2. For local/dev convenience you can disable **Confirm email** under Auth → Providers → Email (or use the confirmation link from the inbox).
+3. Under **Authentication** → **URL Configuration**, add your app origin (e.g. `http://localhost:5173`) to **Site URL** and **Redirect URLs**.
+
+Personal features (itinerary planner, dashboard, swap/reschedule) require a signed-in session. Temple discovery and live crowd browsing stay public.
+
 Optional (recommended for the CV/alert service to avoid hard-coded secrets):
 ```
 MAILJET_API_KEY=<mailjet-key>

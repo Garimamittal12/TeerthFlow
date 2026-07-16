@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -22,15 +22,23 @@ export default function Auth() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-    const { user, signIn, signUp } = useAuth();
+    const { user, loading, signIn, signUp } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const { toast } = useToast();
 
+    const from =
+        (location.state as { from?: string } | null)?.from &&
+        !(location.state as { from?: string }).from!.startsWith("/login") &&
+        !(location.state as { from?: string }).from!.startsWith("/auth")
+            ? (location.state as { from: string }).from
+            : "/";
+
     useEffect(() => {
-        if (user) {
-            navigate("/");
+        if (!loading && user) {
+            navigate(from, { replace: true });
         }
-    }, [user, navigate]);
+    }, [user, loading, navigate, from]);
 
     const validateForm = () => {
         try {
@@ -80,9 +88,17 @@ export default function Auth() {
                     ? "You have successfully signed in."
                     : "Your account has been created successfully.",
             });
-            navigate("/");
+            navigate(from, { replace: true });
         }
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" aria-label="Loading" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex flex-col bg-background">
@@ -90,7 +106,6 @@ export default function Auth() {
 
             <main className="flex-1 flex items-center justify-center py-12 px-4">
                 <div className="w-full max-w-md">
-                    {/* Decorative Header */}
                     <div className="text-center mb-8">
                         <div className="flex justify-center mb-4">
                             <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-gold shadow-lg flex items-center justify-center border border-gold/30">
@@ -102,15 +117,13 @@ export default function Auth() {
                         </h1>
                         <p className="text-muted-foreground">
                             {isLogin
-                                ? "Sign in to access your account and explore pilgrimage sites."
-                                : "Create an account to explore pilgrimage sites and get crowd alerts"}
+                                ? "Sign in to plan itineraries, swap visits, and manage your pilgrimage."
+                                : "Create an account to save itineraries and personalize your journey."}
                         </p>
                     </div>
 
-                    {/* Auth Card */}
                     <div className="bg-card rounded-2xl shadow-lg border border-border p-8">
                         <form onSubmit={handleSubmit} className="space-y-5">
-                            {/* Email Field */}
                             <div className="space-y-2">
                                 <Label htmlFor="email" className="text-foreground font-medium">
                                     Email Address
@@ -123,6 +136,7 @@ export default function Auth() {
                                         placeholder="your@email.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
+                                        autoComplete="email"
                                         className="pl-10 bg-background border-border focus:border-primary"
                                     />
                                 </div>
@@ -131,7 +145,6 @@ export default function Auth() {
                                 )}
                             </div>
 
-                            {/* Password Field */}
                             <div className="space-y-2">
                                 <Label htmlFor="password" className="text-foreground font-medium">
                                     Password
@@ -144,6 +157,7 @@ export default function Auth() {
                                         placeholder="••••••••"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
+                                        autoComplete={isLogin ? "current-password" : "new-password"}
                                         className="pl-10 pr-10 bg-background border-border focus:border-primary"
                                     />
                                     <button
@@ -160,7 +174,6 @@ export default function Auth() {
                                 )}
                             </div>
 
-                            {/* Submit Button */}
                             <Button
                                 type="submit"
                                 disabled={isSubmitting}
@@ -180,7 +193,6 @@ export default function Auth() {
                             </Button>
                         </form>
 
-                        {/* Toggle Auth Mode */}
                         <div className="mt-6 pt-6 border-t border-border text-center">
                             <p className="text-muted-foreground">
                                 {isLogin ? "Don't have an account?" : "Already have an account?"}

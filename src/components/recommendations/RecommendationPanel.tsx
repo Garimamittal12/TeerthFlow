@@ -14,7 +14,9 @@ import {
 } from "@/data/itineraryData";
 import type { AlternativeRecommendation, RitualTiming } from "@/data/itineraryData";
 import { toast } from "sonner";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useDashboardStore } from "@/hooks/useDashboardStore";
+import { useAuth } from "@/hooks/useAuth";
 import { temples as allTemples } from "@/data/mockData";
 
 interface RecommendationPanelProps {
@@ -33,6 +35,18 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
     const [recommendations, setRecommendations] = useState<AlternativeRecommendation[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const { recordAction } = useDashboardStore();
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const requireAuth = () => {
+        if (user) return true;
+        toast.error("Sign in to reschedule or swap visits");
+        navigate("/login", {
+            state: { from: `${location.pathname}${location.search}` },
+        });
+        return false;
+    };
 
     const selectedTemple = useMemo(() => {
         if (!selectedTempleId) return null;
@@ -160,18 +174,21 @@ export function RecommendationPanel({ selectedTempleId, currentTime = "10:00" }:
     }, [selectedTempleId, currentTime]);
 
     const handleReschedule = (templeId: string) => {
+        if (!requireAuth()) return;
         const temple = allTemples.find((t) => t.id === templeId);
         toast.success(`${temple?.name} rescheduled to next best window`);
         recordAction("Reschedule", templeId, temple?.name);
     };
 
     const handleSwap = (templeId: string) => {
+        if (!requireAuth()) return;
         const temple = allTemples.find((t) => t.id === templeId);
         toast.success(`${temple?.name} swapped into current day`);
         recordAction("Swap Today Visit", templeId, temple?.name);
     };
 
     const handleAddEvening = (templeId: string) => {
+        if (!requireAuth()) return;
         const temple = allTemples.find((t) => t.id === templeId);
         toast.success(`${temple?.name} added as evening visit`);
         recordAction("Swap Evening Visit", templeId, temple?.name);
